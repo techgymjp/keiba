@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ダービージョッキー</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <canvas id="view"></canvas>
+
+    <!-- レース中 HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-box" id="hud-rank"><span class="big">-</span><small>番手 / 18頭</small></div>
+        <div class="hud-box center" id="hud-dist"><small>残り</small><span class="big">2400</span><small>m</small><div id="hud-section"></div></div>
+        <div class="hud-box right" id="hud-time"><span class="big">0:00.0</span></div>
+      </div>
+      <div id="commentary"></div>
+      <div id="feel"></div>
+      <div class="hud-bottom">
+        <div class="hud-box" id="hud-stamina">
+          <small>手応え</small>
+          <div class="bar"><div class="fill"></div></div>
+          <div id="hud-ride"></div>
+        </div>
+        <canvas id="minimap" width="220" height="150"></canvas>
+      </div>
+      <div id="center-msg"></div>
+    </div>
+
+    <!-- スマホ用操作 -->
+    <div id="touch" class="hidden">
+      <div class="tgroup left">
+        <button data-key="left">◀<small>内へ</small></button>
+        <button data-key="right">▶<small>外へ</small></button>
+      </div>
+      <div class="tgroup right">
+        <button data-key="down">抑える</button>
+        <button data-key="up">追う</button>
+        <button data-key="whip" class="whip">ムチ</button>
+      </div>
+    </div>
+
+    <!-- タイトル -->
+    <section id="title" class="screen">
+      <div class="panel">
+        <div class="logo">
+          <div class="logo-sub">TOKYO YUSHUN ・ G1 ・ 芝2400m</div>
+          <h1>ダービー<span>ジョッキー</span></h1>
+        </div>
+        <div class="horse-card">
+          <div class="row">
+            <label>あなたの相棒</label>
+            <input id="horse-name" maxlength="10" spellcheck="false">
+          </div>
+          <div class="stats">
+            <div><small>戦績</small><b id="rec"></b></div>
+            <div><small>ダービー制覇</small><b id="wins"></b></div>
+            <div><small>脚質</small><b id="style-label">？？？</b></div>
+          </div>
+          <p class="hint" id="style-hint">脚質（逃げ・先行・差し・追込）は生まれつき。乗りながら見極めろ。</p>
+        </div>
+        <div class="buttons">
+          <button id="btn-start" class="primary">出走する</button>
+          <button id="btn-history">戦績ノート</button>
+          <button id="btn-help">乗り方</button>
+        </div>
+        <button id="btn-newhorse" class="link">新しい馬に乗り替わる</button>
+      </div>
+    </section>
+
+    <!-- 乗り方 -->
+    <section id="help" class="screen hidden">
+      <div class="panel">
+        <h2>乗り方</h2>
+        <table class="keys">
+          <tr><td><kbd>←</kbd><kbd>→</kbd></td><td>進路どり（体重を左右へ）。左が内ラチ。コーナーは内を回るほど距離得。前が詰まったら外へ。</td></tr>
+          <tr><td><kbd>↑</kbd></td><td>追う（前傾）。押している間ペースを上げる。スタミナを使う。</td></tr>
+          <tr><td><kbd>↓</kbd></td><td>抑える（手綱を引いて後傾）。ペースを落とし脚をためる。</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>ムチ。ゲートが開いた瞬間に押すと好スタート。直線では末脚を引き出す。早すぎるムチは馬が嫌がる。</td></tr>
+          <tr><td><kbd>M</kbd> / <kbd>Esc</kbd></td><td>消音 / 一時停止</td></tr>
+        </table>
+        <h3>この馬を知ること</h3>
+        <p>馬には生まれつきの脚質があり、ずっと変わりません。</p>
+        <ul>
+          <li><b>逃げ</b>…先頭で自分のペースを刻むと強い</li>
+          <li><b>先行</b>…前の方の好位でじっと構えると強い</li>
+          <li><b>差し</b>…中団で脚をため、直線で差し切る</li>
+          <li><b>追込</b>…最後方で我慢し、直線で一気に爆発</li>
+        </ul>
+        <p>合わない位置で走らせると、馬は力んだり、やる気をなくしたりします。レース中の馬の様子、レース後のコメント、通過順と上がり3Fから、相棒の脚質を見抜いてください。勝てば脚質が判明します。</p>
+        <div class="buttons"><button class="primary back">戻る</button></div>
+      </div>
+    </section>
+
+    <!-- 戦績 -->
+    <section id="history" class="screen hidden">
+      <div class="panel wide">
+        <h2>戦績ノート</h2>
+        <div class="table-wrap">
+          <table class="hist">
+            <thead><tr><th>#</th><th>着</th><th>通過順</th><th>上がり3F</th><th>タイム</th><th>騎手メモ</th></tr></thead>
+            <tbody id="hist-body"></tbody>
+          </table>
+        </div>
+        <div class="buttons"><button class="primary back">戻る</button></div>
+      </div>
+    </section>
+
+    <!-- 結果 -->
+    <section id="result" class="screen hidden">
+      <div class="panel wide">
+        <div id="res-headline"></div>
+        <div class="table-wrap">
+          <table class="res">
+            <thead><tr><th>着</th><th>馬番</th><th>馬名</th><th>タイム</th><th>着差</th><th>通過順</th><th>上がり</th></tr></thead>
+            <tbody id="res-body"></tbody>
+          </table>
+        </div>
+        <div id="res-notes"></div>
+        <div class="buttons">
+          <button id="btn-again" class="primary">もう一度ダービーへ</button>
+          <button id="btn-totitle">タイトルへ</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="pause" class="screen hidden"><div class="panel"><h2>一時停止</h2><div class="buttons"><button class="primary" id="btn-resume">再開</button><button id="btn-quit">レースをやめる</button></div></div></div>
+    <button id="btn-mute" title="消音 (M)">♪</button>
+    <div id="caption" class="hidden"></div>
+  </div>
+
+  <script src="js/sim.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
