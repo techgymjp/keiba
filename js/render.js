@@ -18,7 +18,7 @@
     for (let i = 0; i < n; i++) {
       const s = i - OFF;
       TX[i] = x; TY[i] = y; TH[i] = th;
-      const k = Sim.isCurve(course, s + 0.5) ? course.dir / course.radius : 0;
+      const k = (Sim.curveOverlap(course, s, s + 1) * course.dir) / course.radius;
       const mid = th + k / 2;
       x += Math.cos(mid);
       y += Math.sin(mid);
@@ -739,7 +739,7 @@
     const t0 = trackAt(C.homeStretch);
     let x = t0.x, y = t0.y, th = t0.th;
     const pts = [];
-    const segs = [[v.S + v.P, 0], [Math.PI * v.R, C.dir / v.R], [v.B, 0], [Math.PI * v.R, C.dir / v.R]];
+    const segs = [[v.S + v.P, 0], [Math.PI * v.R, C.dir / v.R], [v.S + v.P, 0], [Math.PI * v.R, C.dir / v.R]];
     for (const [len, k] of segs) {
       for (let i = 0; i < len; i += 5) {
         pts.push([x + C.dir * 9 * Math.sin(th), y - C.dir * 9 * Math.cos(th)]);

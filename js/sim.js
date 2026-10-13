@@ -3,17 +3,18 @@
   'use strict';
 
   // ---- 競馬場（実際の寸法を簡略化した周回コース） ----
-  // dir: 1=左回り, -1=右回り / S: 4角出口→ゴール / P: ゴール→1角 / B: 向こう正面 / R: コーナー半径
+  // dir: 1=左回り, -1=右回り / S: 4角出口→ゴール / P: ゴール→1角 / R: コーナー半径
+  // 両端が半円の周回路なので、向こう正面は必ずホームストレッチ(S+P)と同じ長さになる
   const VENUES = {
-    tokyoT: { name: '東京', dir: 1, S: 525, P: 150, B: 650, R: 120, width: 24 },
-    tokyoD: { name: '東京', dir: 1, S: 501, P: 130, B: 600, R: 103, width: 22 },
-    nakayamaT: { name: '中山', dir: -1, S: 310, P: 200, B: 420, R: 110, width: 22 },
-    chukyoT: { name: '中京', dir: 1, S: 412, P: 150, B: 450, R: 110, width: 24 },
-    hanshinT: { name: '阪神', dir: -1, S: 356, P: 150, B: 450, R: 115, width: 22 },
-    kyotoT: { name: '京都', dir: -1, S: 404, P: 180, B: 600, R: 112, width: 24 },
-    sapporoT: { name: '札幌', dir: -1, S: 266, P: 150, B: 450, R: 120, width: 22 },
-    kawasakiD: { name: '川崎', dir: 1, S: 300, P: 100, B: 300, R: 80, width: 21 },
-    oiD: { name: '大井', dir: -1, S: 386, P: 150, B: 450, R: 98, width: 22 },
+    tokyoT: { name: '東京', dir: 1, S: 525, P: 150, R: 120, width: 24 },
+    tokyoD: { name: '東京', dir: 1, S: 501, P: 130, R: 103, width: 22 },
+    nakayamaT: { name: '中山', dir: -1, S: 310, P: 200, R: 110, width: 22 },
+    chukyoT: { name: '中京', dir: 1, S: 412, P: 150, R: 110, width: 24 },
+    hanshinT: { name: '阪神', dir: -1, S: 356, P: 150, R: 115, width: 22 },
+    kyotoT: { name: '京都', dir: -1, S: 404, P: 180, R: 112, width: 24 },
+    sapporoT: { name: '札幌', dir: -1, S: 266, P: 150, R: 120, width: 22 },
+    kawasakiD: { name: '川崎', dir: 1, S: 300, P: 100, R: 80, width: 21 },
+    oiD: { name: '大井', dir: -1, S: 386, P: 150, R: 98, width: 22 },
   };
 
   // 年間12戦（1月〜12月）
@@ -40,7 +41,7 @@
     const back = [{ type: 'straight', len: v.S, home: true, final: true }];
     const cycle = [
       { type: 'curve', len: curveLen },
-      { type: 'straight', len: v.B, back: true },
+      { type: 'straight', len: v.S + v.P, back: true },
       { type: 'curve', len: curveLen },
       { type: 'straight', len: v.S + v.P, home: true },
     ];
@@ -114,6 +115,15 @@
   function isCurve(course, s) {
     if (s < 0 || s >= course.length) return false;
     return sectionAt(course, s).type === 'curve';
+  }
+  // [a, b) のうちコーナーに含まれる長さ（描画で曲率を正確に積分するため）
+  function curveOverlap(course, a, b) {
+    let sum = 0;
+    for (const sec of course.sections) {
+      if (sec.type !== 'curve') continue;
+      sum += Math.max(0, Math.min(b, sec.end) - Math.max(a, sec.start));
+    }
+    return sum;
   }
   // スタンド前（ホームストレッチ）か
   function inHome(course, s) {
@@ -538,7 +548,7 @@
 
   const api = {
     VENUES, CALENDAR, STYLES, STYLE_KEYS, VBASE, HORSE_LEN,
-    buildCourse, createRace, step, analyze, sectionAt, isCurve, inHome, marginText, formatTime, mulberry32, randomName, frameOf, passingText,
+    buildCourse, createRace, step, analyze, sectionAt, isCurve, curveOverlap, inHome, marginText, formatTime, mulberry32, randomName, frameOf, passingText,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Sim = api;
