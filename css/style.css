@@ -81,6 +81,22 @@ button.link { background: none; border: none; color: #9fb79f; font-size: 13px; m
 .stats b { font-size: 18px; }
 .hint { font-size: 12px; color: #9fb79f; margin: 10px 0 0; }
 
+#next-race { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: rgba(233, 196, 106, 0.12); border: 1px solid rgba(233, 196, 106, 0.35); }
+#next-race small { display: block; font-size: 11px; color: #c7b07a; }
+#next-race b { font-size: 20px; }
+#next-race .grade { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 4px; background: #c99a2e; color: #1b1405; font-size: 12px; font-weight: bold; vertical-align: middle; }
+#next-race .spec { font-size: 12px; color: #d8d3c4; margin-top: 2px; }
+.season-strip { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin-top: 10px; }
+.season-strip .m { text-align: center; background: rgba(255, 255, 255, 0.06); border-radius: 5px; padding: 3px 0; min-width: 0; }
+.season-strip .m span { display: block; font-size: 9px; color: #9fb79f; }
+.season-strip .m b { font-size: 13px; }
+.season-strip .m i { display: block; font-style: normal; font-size: 8px; color: #c7b07a; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 2px; }
+.season-strip .m.next { outline: 1px solid #e9c46a; }
+.season-strip .m.won { background: linear-gradient(#e9c46a, #b8860b); color: #1b1405; }
+.season-strip .m.won span, .season-strip .m.won i { color: #3b2c06; }
+.season-strip .m.placed { background: rgba(233, 196, 106, 0.3); }
+.season-end { margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(233, 196, 106, 0.4); }
+
 table.keys { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.keys td { padding: 6px 4px; vertical-align: top; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
 table.keys td:first-child { white-space: nowrap; width: 1%; padding-right: 10px; }

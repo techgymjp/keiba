@@ -47,7 +47,7 @@
     <section id="title" class="screen">
       <div class="panel">
         <div class="logo">
-          <div class="logo-sub">TOKYO YUSHUN ・ G1 ・ 芝2400m</div>
+          <div class="logo-sub">G1 ROAD ・ 1月〜12月 全12戦</div>
           <h1>ダービー<span>ジョッキー</span></h1>
         </div>
         <div class="horse-card">
@@ -57,9 +57,11 @@
           </div>
           <div class="stats">
             <div><small>戦績</small><b id="rec"></b></div>
-            <div><small>ダービー制覇</small><b id="wins"></b></div>
+            <div><small>ビッグレース</small><b id="wins"></b></div>
             <div><small>脚質</small><b id="style-label">？？？</b></div>
           </div>
+          <div id="next-race"></div>
+          <div id="season-strip" class="season-strip"></div>
           <p class="hint" id="style-hint">脚質（逃げ・先行・差し・追込）は生まれつき。乗りながら見極めろ。</p>
         </div>
         <div class="buttons">
@@ -76,7 +78,7 @@
       <div class="panel">
         <h2>乗り方</h2>
         <table class="keys">
-          <tr><td><kbd>←</kbd><kbd>→</kbd></td><td>進路どり（体重を左右へ）。左が内ラチ。コーナーは内を回るほど距離得。前が詰まったら外へ。</td></tr>
+          <tr><td><kbd>←</kbd><kbd>→</kbd></td><td>進路どり（体重を左右へ）。左回りは左、右回りは右が内ラチ。コーナーは内を回るほど距離得。前が詰まったら外へ。</td></tr>
           <tr><td><kbd>↑</kbd></td><td>追う（前傾）。押している間ペースを上げる。スタミナを使う。</td></tr>
           <tr><td><kbd>↓</kbd></td><td>抑える（手綱を引いて後傾）。ペースを落とし脚をためる。</td></tr>
           <tr><td><kbd>Space</kbd></td><td>ムチ。ゲートが開いた瞬間に押すと好スタート。直線では末脚を引き出す。早すぎるムチは馬が嫌がる。</td></tr>
@@ -90,6 +92,8 @@
           <li><b>差し</b>…中団で脚をため、直線で差し切る</li>
           <li><b>追込</b>…最後方で我慢し、直線で一気に爆発</li>
         </ul>
+        <h3>年間12戦</h3>
+        <p>1月の川崎記念から12月の有馬記念まで、毎月ひとつの大レースに挑みます。競馬場・距離（1200m〜3000m）・芝ダート・左右回りはレースごとに違いますが、相棒の脚質はずっと同じ。直線が短いコースでは前が有利、長いコースでは末脚が生きる…コースの個性も味わってください。</p>
         <p>合わない位置で走らせると、馬は力んだり、やる気をなくしたりします。レース中の馬の様子、レース後のコメント、通過順と上がり3Fから、相棒の脚質を見抜いてください。勝てば脚質が判明します。</p>
         <div class="buttons"><button class="primary back">戻る</button></div>
       </div>
@@ -101,7 +105,7 @@
         <h2>戦績ノート</h2>
         <div class="table-wrap">
           <table class="hist">
-            <thead><tr><th>#</th><th>着</th><th>通過順</th><th>上がり3F</th><th>タイム</th><th>騎手メモ</th></tr></thead>
+            <thead><tr><th>年</th><th>レース</th><th>着</th><th>通過順</th><th>上がり3F</th><th>タイム</th><th>騎手メモ</th></tr></thead>
             <tbody id="hist-body"></tbody>
           </table>
         </div>
@@ -121,7 +125,8 @@
         </div>
         <div id="res-notes"></div>
         <div class="buttons">
-          <button id="btn-again" class="primary">もう一度ダービーへ</button>
+          <button id="btn-again" class="primary">次のレースへ</button>
+          <button id="btn-season-end" class="primary hidden">シーズン終了 ── タイトルへ</button>
           <button id="btn-totitle">タイトルへ</button>
         </div>
       </div>

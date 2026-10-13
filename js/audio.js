@@ -109,11 +109,24 @@
     }
   })();
 
+  // 競馬場ごとの味付け（調とテンポ）。大一番は少しゆったり堂々と
+  const FANFARE_STYLE = {
+    east: { shift: 0, bpm: 112 }, // 東京・中山
+    west: { shift: 2, bpm: 120 }, // 京都・阪神・中京
+    local: { shift: -3, bpm: 104 }, // 川崎・大井
+    north: { shift: 5, bpm: 118 }, // 札幌
+    grand: { shift: -2, bpm: 96 }, // ダービー・ジャパンC・有馬記念
+  };
+  const VENUE_REGION = { tokyoT: 'east', tokyoD: 'east', nakayamaT: 'east', kyotoT: 'west', hanshinT: 'west', chukyoT: 'west', kawasakiD: 'local', oiD: 'local', sapporoT: 'north' };
+
   // オリジナルのファンファーレ（約13秒）。戻り値: 長さ(秒)
-  function fanfare() {
+  function fanfare(def) {
     init();
     if (!ctx) return 0;
-    const bpm = 112;
+    const grand = def && (def.month === 5 || def.month === 11 || def.month === 12);
+    const fs = FANFARE_STYLE[grand ? 'grand' : (def && VENUE_REGION[def.venue]) || 'east'];
+    const mul = Math.pow(2, fs.shift / 12);
+    const bpm = fs.bpm;
     const b = 60 / bpm;
     const t0 = now() + 0.15;
     // [音, 拍]  null は休符。3連は 1/3 拍
@@ -133,8 +146,8 @@
     for (const [n, beats] of lead) {
       const dur = beats * b;
       if (n) {
-        brass(NOTE[n], t, dur * 0.92, 0.09);
-        if (beats >= 0.5 && third[n]) brass(NOTE[third[n]], t, dur * 0.92, 0.055);
+        brass(NOTE[n] * mul, t, dur * 0.92, 0.09);
+        if (beats >= 0.5 && third[n]) brass(NOTE[third[n]] * mul, t, dur * 0.92, 0.055);
       }
       t += dur;
     }
@@ -142,14 +155,15 @@
     // ベースとティンパニ
     const bass = [['C3', 0], ['C3', 3.5], ['A2', 7], ['F2', 9], ['G2', 10.5], ['F2', 14], ['G2', 17], ['C3', 19]];
     for (const [n, at] of bass) {
-      brass(NOTE[n], t0 + at * b, b * 1.8, 0.07);
-      timpani(NOTE[n] / 1, t0 + at * b, 0.35);
+      brass(NOTE[n] * mul, t0 + at * b, b * 1.8, 0.07);
+      timpani(NOTE[n] * mul, t0 + at * b, 0.35);
     }
     // 最後のロール
-    for (let i = 0; i < 18; i++) timpani(NOTE.C3, end - 4.5 * b + i * b * 0.18, 0.12 + i * 0.012);
-    timpani(NOTE.C3, end - 0.1, 0.6);
-    brass(NOTE.C4, end - 4.5 * b, 4.5 * b, 0.06);
-    brass(NOTE.G4, end - 4.5 * b, 4.5 * b, 0.05);
+    for (let i = 0; i < 18; i++) timpani(NOTE.C3 * mul, end - 4.5 * b + i * b * 0.18, 0.12 + i * 0.012);
+    timpani(NOTE.C3 * mul, end - 0.1, 0.6);
+    brass(NOTE.C4 * mul, end - 4.5 * b, 4.5 * b, 0.06);
+    brass(NOTE.G4 * mul, end - 4.5 * b, 4.5 * b, 0.05);
+    if (grand) brass(NOTE.E4 * mul, end - 4.5 * b, 4.5 * b, 0.05);
     // 手拍子と歓声
     setCrowd(0.12);
     for (let i = 0; i < 40; i++) noiseHit(end + 0.05 + Math.random() * 1.6, 0.06, 0.25, 2500, 'bandpass', 1.2);

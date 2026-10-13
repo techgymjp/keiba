@@ -1,26 +1,31 @@
 // 騎手目線の疑似3D描画
 (function () {
   'use strict';
-  const C = Sim.COURSE;
   const OFF = 120; // 負の距離（ゲート後方）用オフセット
-  const LEN = 2900;
+  let C = null; // 現在のコース
+  let TX, TY, TH;
 
   // ---- コースの世界座標（内ラチ基準, 1m 刻み） ----
-  const TX = new Float64Array(LEN + OFF + 2);
-  const TY = new Float64Array(LEN + OFF + 2);
-  const TH = new Float64Array(LEN + OFF + 2);
-  (function build() {
+  // 左回りは左へ、右回りは右へ曲がる。w（内ラチからの距離）は常にコースの外側へ。
+  function setCourse(course) {
+    if (C === course) return;
+    C = course;
+    const n = Math.ceil(course.length) + OFF + 420;
+    TX = new Float64Array(n);
+    TY = new Float64Array(n);
+    TH = new Float64Array(n);
     let x = 0, y = 0, th = 0;
-    for (let i = 0; i < TX.length; i++) {
+    for (let i = 0; i < n; i++) {
       const s = i - OFF;
       TX[i] = x; TY[i] = y; TH[i] = th;
-      const k = s >= 0 && s < C.length && Sim.isCurve(s + 0.5) ? 1 / C.radius : 0;
+      const k = Sim.isCurve(course, s + 0.5) ? course.dir / course.radius : 0;
       const mid = th + k / 2;
       x += Math.cos(mid);
       y += Math.sin(mid);
       th += k;
     }
-  })();
+    mapBounds = null;
+  }
 
   function trackAt(s) {
     let p = s + OFF;
@@ -36,7 +41,8 @@
   // s, w(内ラチから外への距離) → 世界座標
   function worldAt(s, w) {
     const t = trackAt(s);
-    return { x: t.x + w * Math.sin(t.th), y: t.y - w * Math.cos(t.th), th: t.th };
+    const d = C.dir;
+    return { x: t.x + d * w * Math.sin(t.th), y: t.y - d * w * Math.cos(t.th), th: t.th };
   }
 
   // 枠の色（帽子）
@@ -106,8 +112,15 @@
   }
 
   function inHome(s) {
-    return s < 350 || s >= 1875;
+    return Sim.inHome(C, s);
   }
+
+  // 空の色（昼・夕暮れ・ナイター）
+  const SKIES = {
+    day: { top: '#3f86d8', bottom: '#cfe6f7', cloud: 'rgba(255,255,255,0.85)', tint: null },
+    dusk: { top: '#4d5f9e', bottom: '#f6c48a', cloud: 'rgba(255,214,170,0.75)', tint: 'rgba(255,140,60,0.10)' },
+    night: { top: '#050a1f', bottom: '#1f2b52', cloud: 'rgba(120,130,170,0.25)', tint: 'rgba(5,10,40,0.38)' },
+  };
 
   // ---- メイン描画 ----
   // st: { race, cam:{s,x,h,yaw,roll}, rider:{...}, gate, time }
@@ -140,15 +153,16 @@
     }
 
     // 空
+    const SK = SKIES[st.sky] || SKIES.day;
     const sky = ctx.createLinearGradient(0, horizon - H * 0.6, 0, horizon);
-    sky.addColorStop(0, '#3f86d8');
-    sky.addColorStop(1, '#cfe6f7');
+    sky.addColorStop(0, SK.top);
+    sky.addColorStop(1, SK.bottom);
     ctx.fillStyle = sky;
     ctx.fillRect(-W, -H, W * 3, horizon + H + 2);
     // 雲
     const period = Math.round(Math.PI * 2 * F);
     const scroll = ((-thc * F) % period + period) % period;
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillStyle = SK.cloud;
     for (let i = 0; i < 9; i++) {
       const bx = ((i * period) / 9 + scroll * 0.98) % period - period / 2 + cx;
       for (const k of [0, period, -period]) {
@@ -195,7 +209,10 @@
       const depth = Math.max(projSW(sFar, 10, 0).fwd, projSW(sNear, 10, 0).fwd);
       if (depth > NEAR) {
         ops.push({ d: depth, f: () => {
-          const cols = [band ? '#4c8a3a' : '#478437', band ? '#9b7650' : '#94704a', band ? '#5b9a42' : '#55943e', band ? '#3f9b3a' : '#378f33', band ? '#4d8d3e' : '#48873a'];
+          // ダートのレースは本馬場が砂、外側が芝コース。芝のレースは内側にダートコース
+          const cols = C.surface === 'dirt'
+            ? [band ? '#4c8a3a' : '#478437', band ? '#4c8a3a' : '#478437', band ? '#5b9a42' : '#55943e', band ? '#b08a5e' : '#a88257', band ? '#3f9b3a' : '#378f33']
+            : [band ? '#4c8a3a' : '#478437', band ? '#9b7650' : '#94704a', band ? '#5b9a42' : '#55943e', band ? '#3f9b3a' : '#378f33', band ? '#4d8d3e' : '#48873a'];
           for (let j = 0; j < 5; j++) {
             if (ok4(far[j], far[j + 1], near[j + 1], near[j])) quad(ctx, far[j], far[j + 1], near[j + 1], near[j], cols[j]);
           }
@@ -212,7 +229,7 @@
         if (dd > NEAR) ops.push({ d: dd - 0.01, f: () => rail(ctx, projSW, sFar, sNear, w) });
       }
       // ハロン棒・ゴール板
-      for (let m = 200; m <= 2200; m += 200) {
+      for (let m = 200; m < C.length; m += 200) {
         const ps = C.length - m;
         if (ps < sFar && ps >= sNear) ops.push({ d: projSW(ps, -1.6, 0).fwd, f: () => furlongPost(ctx, projSW, ps, m) });
       }
@@ -228,7 +245,7 @@
         const ts = Math.floor(sFar / 40) * 40 + 13, tw = -40 - (hash(Math.floor(sFar / 40) + 9) % 20);
         ops.push({ d: projSW(ts, tw, 0).fwd, f: () => tree(ctx, projSW, ts, tw) });
       }
-      if (st.gateWorld && 0.5 < sFar && 0.5 >= sNear) ops.push({ d: projSW(0.5, 10, 0).fwd, f: () => gateWorld(ctx, projSW) });
+      if (st.gateWorld && 0.5 < sFar && 0.5 >= sNear) ops.push({ d: projSW(0.5, 10, 0).fwd, f: () => gateWorld(ctx, projSW, st.race ? st.race.N : 18) });
     }
     // スタンド（6m 格子）
     for (let g = Math.floor((cam.s - back) / 6) * 6; g < cam.s + DRAW; g += 6) {
@@ -249,6 +266,10 @@
     }
     ops.sort((a, b) => b.d - a.d);
     for (const op of ops) op.f();
+    if (SK.tint) {
+      ctx.fillStyle = SK.tint;
+      ctx.fillRect(-W, -H, W * 3, H * 3);
+    }
     ctx.restore();
   }
 
@@ -330,7 +351,7 @@
     ctx.arc(top.sx, top.sy, top.k * 0.55, 0, Math.PI * 2);
     ctx.fill();
     // 反対側のポール
-    const t2 = projSW(s, Sim.COURSE.width + 2.5, 5), b2 = projSW(s, Sim.COURSE.width + 2.5, 0);
+    const t2 = projSW(s, C.width + 2.5, 5), b2 = projSW(s, C.width + 2.5, 0);
     ctx.beginPath();
     ctx.moveTo(b2.sx, b2.sy);
     ctx.lineTo(t2.sx, t2.sy);
@@ -400,19 +421,19 @@
     ctx.fill();
   }
 
-  function gateWorld(ctx, projSW) {
-    const W = Sim.COURSE.width;
-    const a = projSW(0.5, -0.2, 2.8), b = projSW(0.5, 21.6, 2.8);
-    const a0 = projSW(0.5, -0.2, 0), b0 = projSW(0.5, 21.6, 0);
+  function gateWorld(ctx, projSW, n) {
+    const wEnd = 0.1 + n * 1.15;
+    const a = projSW(0.5, -0.2, 2.8), b = projSW(0.5, wEnd, 2.8);
+    const a0 = projSW(0.5, -0.2, 0);
     if (a.fwd < 0.5) return;
     ctx.fillStyle = '#2f7d4a';
     ctx.fillRect(a.sx, a.sy, b.sx - a.sx, (a0.sy - a.sy) * 0.18);
-    for (let i = 0; i <= 18; i++) {
+    for (let i = 0; i <= n; i++) {
       const w = 0.1 + i * 1.15;
       const t = projSW(0.5, w, 2.8), bt = projSW(0.5, w, 0);
       ctx.fillStyle = '#e8e8e8';
       ctx.fillRect(t.sx - t.k * 0.06, t.sy, t.k * 0.12, bt.sy - t.sy);
-      if (i < 18) {
+      if (i < n) {
         const m = projSW(0.5, w + 0.575, 2.6);
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${Math.max(5, m.k * 0.35)}px sans-serif`;
@@ -711,39 +732,73 @@
 
   // ---- ミニマップ ----
   let mapBounds = null;
+  let lapPts = null;
+  // 周回コース全体（4角出口から1周）とスタート地点の引き込み線
+  function buildLap() {
+    const v = C.venue;
+    const t0 = trackAt(C.homeStretch);
+    let x = t0.x, y = t0.y, th = t0.th;
+    const pts = [];
+    const segs = [[v.S + v.P, 0], [Math.PI * v.R, C.dir / v.R], [v.B, 0], [Math.PI * v.R, C.dir / v.R]];
+    for (const [len, k] of segs) {
+      for (let i = 0; i < len; i += 5) {
+        pts.push([x + C.dir * 9 * Math.sin(th), y - C.dir * 9 * Math.cos(th)]);
+        const d = Math.min(5, len - i);
+        const mid = th + (k * d) / 2;
+        x += Math.cos(mid) * d;
+        y += Math.sin(mid) * d;
+        th += k * d;
+      }
+    }
+    pts.push(pts[0]);
+    const chute = C.sections[0].chute ? C.sections[0].len : 0;
+    if (chute > 0) {
+      pts.push(null);
+      for (let s = 0; s <= chute + 5; s += 5) {
+        const p = worldAt(s, 9);
+        pts.push([p.x, p.y]);
+      }
+    }
+    return pts;
+  }
   function drawMinimap(ctx, w, h, race) {
     if (!mapBounds) {
+      lapPts = buildLap();
       let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
-      for (let s = 0; s <= C.length; s += 10) {
-        const p = trackAt(s);
-        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      for (const p of lapPts) {
+        if (!p) continue;
+        minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]);
+        minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]);
       }
       mapBounds = { minX, maxX, minY, maxY };
     }
     const b = mapBounds;
     const pad = 10;
     const sc = Math.min((w - pad * 2) / (b.maxX - b.minX + 60), (h - pad * 2) / (b.maxY - b.minY + 60));
-    const ox = pad + 30 * sc - b.minX * sc;
-    const oy = h - pad - 30 * sc + b.minY * sc;
+    const ox = (w - (b.maxX - b.minX) * sc) / 2 - b.minX * sc;
+    const oy = (h + (b.maxY - b.minY) * sc) / 2 + b.minY * sc;
     const tp = (s, wv) => {
       const p = worldAt(s, wv);
       return [ox + p.x * sc, oy - p.y * sc];
     };
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = 'rgba(0,30,0,0.55)';
+    ctx.fillStyle = 'rgba(8,28,14,0.88)';
     ctx.fillRect(0, 0, w, h);
     // 周回路
-    ctx.strokeStyle = '#6fc56a';
+    ctx.strokeStyle = C.surface === 'dirt' ? '#c79a62' : '#6fc56a';
     ctx.lineWidth = Math.max(3, 18 * sc);
+    ctx.lineJoin = 'round';
     ctx.beginPath();
-    for (let s = -350; s <= C.length + 120; s += 10) {
-      const [x, y] = tp(s, 9);
-      if (s === -350) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    let pen = false;
+    for (const p of lapPts) {
+      if (!p) { pen = false; continue; }
+      const X = ox + p[0] * sc, Y = oy - p[1] * sc;
+      if (pen) ctx.lineTo(X, Y); else ctx.moveTo(X, Y);
+      pen = true;
     }
     ctx.stroke();
     // ゴール
-    const [gx, gy] = tp(C.length, -6), [gx2, gy2] = tp(C.length, 26);
+    const [gx, gy] = tp(C.length, -6), [gx2, gy2] = tp(C.length, C.width + 4);
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -752,7 +807,7 @@
     ctx.stroke();
     // 馬
     for (const hs of race.horses) {
-      const [x, y] = tp(Math.min(hs.s, C.length + 100), hs.x);
+      const [x, y] = tp(Math.min(hs.s, C.length + C.postFinish), hs.x);
       ctx.fillStyle = hs.isPlayer ? '#ffd23f' : FRAME_COLORS[hs.frame];
       ctx.beginPath();
       ctx.arc(x, y, hs.isPlayer ? 4.5 : 2.6, 0, Math.PI * 2);
@@ -765,5 +820,7 @@
     }
   }
 
-  window.Render = { draw, drawRider, drawGateOverlay, drawMinimap, horseLook, worldAt, trackAt };
+  setCourse(Sim.buildCourse(Sim.CALENDAR[4]));
+
+  window.Render = { setCourse, draw, drawRider, drawGateOverlay, drawMinimap, horseLook, worldAt, trackAt };
 })();
