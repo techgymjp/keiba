@@ -175,11 +175,13 @@
     const DRAW = 260;
     const back = Math.abs(cam.yaw || 0) > 0.2 ? 140 : 0;
     const segs = [];
-    let s = cam.s + 0.6 - back;
+    // 区切りは世界座標の格子に固定（カメラが動いても模様がちらつかない）
+    let s = Math.ceil((cam.s + 0.6 - back) / 1.5) * 1.5;
     while (s < cam.s + DRAW) {
-      const d = Math.abs(s - cam.s);
       segs.push(s);
-      s += d < 30 ? 1.5 : d < 100 ? 3 : 5;
+      const d = Math.abs(s - cam.s);
+      const step = d < 30 ? 1.5 : d < 100 ? 3 : 6;
+      s = (Math.floor(s / step + 1e-6) + 1) * step;
     }
     const WS = [-70, -26, -9, -0.8, C.width + 1.5, 40];
     const rows = segs.map((sv) => WS.map((w) => projSW(sv, w, 0)));
@@ -189,7 +191,7 @@
     for (let i = segs.length - 1; i > 0; i--) {
       const sFar = segs[i], sNear = segs[i - 1];
       const far = rows[i], near = rows[i - 1];
-      const band = Math.floor(sNear / 6) % 2 === 0;
+      const band = Math.floor((sFar + sNear) / 12) % 2 === 0;
       const depth = Math.max(projSW(sFar, 10, 0).fwd, projSW(sNear, 10, 0).fwd);
       if (depth > NEAR) {
         ops.push({ d: depth, f: () => {
@@ -217,8 +219,7 @@
       if (C.length < sFar && C.length >= sNear) ops.push({ d: projSW(C.length, -2.2, 0).fwd, f: () => goalPost(ctx, projSW, C.length) });
       // スタンド・木
       if (inHome(sNear) && inHome(sFar)) {
-        const dd = projSW((sFar + sNear) / 2, 50, 0).fwd;
-        if (dd > NEAR) ops.push({ d: dd, f: () => stands(ctx, projSW, sFar, sNear) });
+        // スタンドは 6m 格子で別に描く
       } else if (Math.floor(sNear / 25) !== Math.floor(sFar / 25)) {
         const ts = Math.floor(sFar / 25) * 25, tw = 55 + (hash(Math.floor(sFar / 25)) % 30);
         ops.push({ d: projSW(ts, tw, 0).fwd, f: () => tree(ctx, projSW, ts, tw) });
@@ -228,6 +229,13 @@
         ops.push({ d: projSW(ts, tw, 0).fwd, f: () => tree(ctx, projSW, ts, tw) });
       }
       if (st.gateWorld && 0.5 < sFar && 0.5 >= sNear) ops.push({ d: projSW(0.5, 10, 0).fwd, f: () => gateWorld(ctx, projSW) });
+    }
+    // スタンド（6m 格子）
+    for (let g = Math.floor((cam.s - back) / 6) * 6; g < cam.s + DRAW; g += 6) {
+      const g0 = g, g1 = g + 6;
+      if (!inHome(g0) || !inHome(g1)) continue;
+      const dd = projSW(g + 3, 50, 0).fwd;
+      if (dd > NEAR) ops.push({ d: dd, f: () => stands(ctx, projSW, g1, g0) });
     }
     // 馬
     if (st.race) {
@@ -244,8 +252,13 @@
     ctx.restore();
   }
 
-  function quad(ctx, a, b, c, d, color) {
+  function quad(ctx, a, b, c, d, color, seam) {
     ctx.fillStyle = color;
+    if (seam) {
+      // 隣の面との間に髪の毛ほどの隙間（斜めの線）が出ないよう、同色で縁取る
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+    }
     ctx.beginPath();
     ctx.moveTo(a.sx, a.sy);
     ctx.lineTo(b.sx, b.sy);
@@ -253,6 +266,7 @@
     ctx.lineTo(d.sx, d.sy);
     ctx.closePath();
     ctx.fill();
+    if (seam) ctx.stroke();
   }
 
   function rail(ctx, projSW, sFar, sNear, w) {
@@ -332,29 +346,31 @@
     const f2 = projSW(sFar, W0 + 34, 22), n2 = projSW(sNear, W0 + 34, 22);
     const f3 = projSW(sFar, W0 - 2, 27), n3 = projSW(sNear, W0 - 2, 27);
     const f4 = projSW(sFar, W0 + 40, 30), n4 = projSW(sNear, W0 + 40, 30);
-    for (const p of [f0, n0, f2, n2, f4, n4]) if (p.fwd <= 0.3) return;
-    quad(ctx, f0, n0, n1, f1, '#c9c4bb');
+    // カメラ面に近い部分は巨大な斜めの板になるので描かない
+    for (const p of [f0, n0, f1, n1, f2, n2, f3, n3, f4, n4]) if (p.fwd <= 4) return;
+    quad(ctx, f0, n0, n1, f1, '#c9c4bb', true);
     // 観客席：落ち着いた地色 + 色とりどりの観客
     const rowsN = 4;
     for (let r = 0; r < rowsN; r++) {
       const a = lerpP(f1, f2, r / rowsN), b = lerpP(n1, n2, r / rowsN);
       const c = lerpP(n1, n2, (r + 1) / rowsN), d = lerpP(f1, f2, (r + 1) / rowsN);
-      quad(ctx, a, b, c, d, CROWD_BASE[(r + Math.floor(sNear / 30)) % CROWD_BASE.length]);
+      quad(ctx, a, b, c, d, CROWD_BASE[(r + Math.floor(sNear / 30)) % CROWD_BASE.length], true);
     }
     const area = Math.abs((n2.sx - f1.sx) * (n1.sy - f2.sy));
-    const nDots = Math.min(40, Math.max(3, Math.floor(area / 250)));
-    const sz = Math.max(1, Math.min(n1.k, f1.k) * 0.45);
-    let hh = hash(Math.floor(sNear * 7) + 1);
+    const nDots = Math.min(60, Math.max(3, Math.floor(area / 180)));
+    const sz = Math.max(1, Math.min(6, Math.min(n1.k, f1.k) * 0.3));
+    let hh = hash(Math.round(sNear) * 7 + 1);
     for (let i = 0; i < nDots; i++) {
       hh = hash(hh + i);
-      const u = (hh & 1023) / 1023, v = ((hh >>> 10) & 1023) / 1023;
+      // 端から離して置く（隣の面に半分隠れて斜めに欠けないように）
+      const u = 0.1 + 0.8 * ((hh & 1023) / 1023), v = 0.05 + 0.85 * (((hh >>> 10) & 1023) / 1023);
       const top = lerpP(f1, n1, u), bot = lerpP(f2, n2, u);
       const p = lerpP(top, bot, v);
       ctx.fillStyle = CROWD_DOTS[(hh >>> 20) % CROWD_DOTS.length];
       ctx.fillRect(p.sx, p.sy, sz, sz * 1.3);
     }
     // 屋根
-    quad(ctx, f3, n3, n4, f4, '#e9ecef');
+    quad(ctx, f3, n3, n4, f4, '#d5dade', true);
     // 柱（12mおき）
     const pz = Math.ceil(sNear / 12) * 12;
     if (pz < sFar) {

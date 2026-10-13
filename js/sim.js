@@ -210,7 +210,14 @@
   // ---- 1ステップ ----
   // input: プレイヤー入力 { effort:-1|0|1, whip:bool, steer:-1|0|1 }
   function step(race, input, dt) {
-    if (race.over) return;
+    if (race.over) {
+      // 全頭ゴール後も結果表示までは流し続ける
+      for (const h of race.horses) {
+        h.v = Math.max(5, h.v - 1.1 * dt);
+        h.s += h.v * dt;
+      }
+      return;
+    }
     race.t += dt;
     const t = race.t;
     // 順位（進んでいる順）
@@ -224,7 +231,14 @@
     race.order = order;
 
     for (const h of order) {
-      if (h.finished) continue;
+      if (h.finished) {
+        // ゴール後は止まらず、徐々に速度を落としながら流していく
+        h.v = Math.max(5, h.v - 1.1 * dt);
+        h.eff = 0.9;
+        h.effort = -1;
+        h.s += h.v * dt;
+        continue;
+      }
       const st = STYLES[h.style];
       const ctrl = h.isPlayer ? input : aiControl(race, h, dt);
       h.effort = ctrl.effort;
