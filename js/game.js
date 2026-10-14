@@ -420,6 +420,7 @@
   // ---- HUD ----
   function updateHud() {
     const p = race.player;
+    $('hud-field').textContent = race.N;
     $('hud-rank').querySelector('.big').textContent = p.finished ? p.place != null ? p.place : p.rank + 1 : p.rank + 1;
     const rem = Math.max(0, race.course.length - Math.max(0, p.s));
     $('hud-dist').querySelector('.big').textContent = Math.ceil(rem);
