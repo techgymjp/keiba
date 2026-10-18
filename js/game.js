@@ -185,6 +185,41 @@
   $('btn-start').addEventListener('click', () => startRace());
   $('btn-again').addEventListener('click', () => startRace());
   $('btn-season-end').addEventListener('click', () => toTitle());
+
+  // ---- シェア ----
+  let shareText = '';
+  // file:// で開いているときは URL を付けない（他の人には開けないため）
+  function shareUrl() {
+    return /^https?:/.test(location.protocol) ? location.origin + location.pathname : '';
+  }
+  function shareMsg(t) {
+    $('share-msg').textContent = t;
+  }
+  $('btn-share').addEventListener('click', async () => {
+    const url = shareUrl();
+    if (navigator.share) {
+      // スマホ：OSの共有シート（X・LINE・メッセージなど）
+      try {
+        await navigator.share(url ? { text: shareText, url } : { text: shareText });
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // キャンセル
+      }
+    }
+    // PC：Xの投稿画面を開く
+    const q = new URLSearchParams({ text: shareText });
+    if (url) q.set('url', url);
+    window.open('https://x.com/intent/post?' + q.toString(), '_blank', 'noopener');
+  });
+  $('btn-copy').addEventListener('click', async () => {
+    const text = shareText + (shareUrl() ? '\n' + shareUrl() : '');
+    try {
+      await navigator.clipboard.writeText(text);
+      shareMsg('コピーしました');
+    } catch (e) {
+      window.prompt('この文章をコピーしてください', text);
+    }
+  });
   $('btn-totitle').addEventListener('click', () => toTitle());
   $('btn-help').addEventListener('click', () => show('help'));
   $('btn-history').addEventListener('click', () => { refreshHistory(); show('history'); });
@@ -635,6 +670,22 @@
     }
     $('res-body').innerHTML = rows.join('');
     $('res-notes').innerHTML = '<h3>騎手コメント</h3>' + notes.map((n) => `<p>・${esc(n)}</p>`).join('') + seasonHtml;
+    // シェア文（シーズン最終戦はシーズン総括）
+    const tag = '#ダービージョッキー';
+    if (seasonDone) {
+      const last = save.lastSeason;
+      const w = last.results.filter((r) => r.place === 1).length;
+      const t3 = last.results.filter((r) => r.place <= 3).length;
+      const wonNames = CAL.filter((d, i) => last.results[i].place === 1).map((d) => d.name);
+      const marks = last.results.map((r) => (r.place === 1 ? '🥇' : r.place === 2 ? '🥈' : r.place === 3 ? '🥉' : '・')).join('');
+      shareText = `🏇 ${p.name}と駆けた${last.year}年目、12戦${w}勝（3着内${t3}回）！\n${marks}\n` +
+        (wonNames.length ? `勝ったレース：${wonNames.join('・')}\n` : '') +
+        `最後は${curDef.name}で${p.place}着。${tag}`;
+    } else {
+      const head = won ? `🏆 ${p.name}で${curDef.name}を制覇！` : `🏇 ${curDef.name}（${curDef.grade}）で${p.name}は${p.place}着`;
+      shareText = `${head}\n${raceSpec(curDef)}\nタイム ${Sim.formatTime(p.finishTime)} ／ 通過順 ${passing} ／ 上がり3F ${p.last3f.toFixed(1)}\n${tag}`;
+    }
+    shareMsg('');
     show('result');
   }
 
