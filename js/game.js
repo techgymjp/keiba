@@ -188,9 +188,10 @@
 
   // ---- シェア ----
   let shareText = '';
-  // file:// で開いているときは URL を付けない（他の人には開けないため）
+  // シェアに付けるURL（ゲーム紹介記事）
+  const SHARE_URL = 'https://techgym.jp/column/claude-code-game-keiba/';
   function shareUrl() {
-    return /^https?:/.test(location.protocol) ? location.origin + location.pathname : '';
+    return SHARE_URL;
   }
   function shareMsg(t) {
     $('share-msg').textContent = t;
