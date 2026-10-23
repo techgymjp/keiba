@@ -202,13 +202,11 @@
     refreshTitle();
   });
   $('btn-start').addEventListener('click', () => startRace());
-  // 2 回に 1 回、次のレースの前に全画面広告を出す（Android アプリのみ）
-  let nextCount = 0;
+  // 次のレースの前に毎回、全画面広告を出す（Android アプリのみ）
   let nextBusy = false;
   $('btn-again').addEventListener('click', async () => {
     if (nextBusy) return;
-    nextCount++;
-    if (Ads.available && nextCount % 2 === 0) {
+    if (Ads.available) {
       nextBusy = true;
       await Ads.showInterstitial();
       nextBusy = false;
