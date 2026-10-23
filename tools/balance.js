@@ -1,9 +1,10 @@
-// 脚質バランス検証: node tools/balance.js [レース数] [fps] [月(1-12)]
+// 脚質バランス検証: node tools/balance.js [レース数] [fps] [レース(id か 1〜24 の番号)]
 // 行: 馬の真の脚質 / 列: プレイヤーの乗り方
 const Sim = require('../js/sim.js');
 const N = +process.argv[2] || 150;
 const DT = 1 / (+process.argv[3] || 60);
-const DEF = Sim.CALENDAR[(+process.argv[4] || 5) - 1];
+const arg = process.argv[4] || 'derby';
+const DEF = Sim.CALENDAR.find((d) => d.id === arg) || Sim.CALENDAR[+arg - 1];
 const strategies = Sim.STYLE_KEYS.concat(['naive']);
 
 function botInput(race, h, strat) {
@@ -27,7 +28,7 @@ function botInput(race, h, strat) {
   return c;
 }
 
-console.log(`${DEF.month}月 ${DEF.name} ${DEF.length}m ${DEF.field}頭`);
+console.log(`${DEF.month}/${DEF.day} ${DEF.name} ${DEF.length}m ${DEF.field}頭`);
 console.log('true\\play ' + strategies.map((s) => s.padStart(14)).join(''));
 for (const trueStyle of Sim.STYLE_KEYS) {
   let line = trueStyle.padEnd(10);

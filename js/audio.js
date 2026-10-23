@@ -113,17 +113,15 @@
   const FANFARE_STYLE = {
     east: { shift: 0, bpm: 112 }, // 東京・中山
     west: { shift: 2, bpm: 120 }, // 京都・阪神・中京
-    local: { shift: -3, bpm: 104 }, // 川崎・大井
-    north: { shift: 5, bpm: 118 }, // 札幌
     grand: { shift: -2, bpm: 96 }, // ダービー・ジャパンC・有馬記念
   };
-  const VENUE_REGION = { tokyoT: 'east', tokyoD: 'east', nakayamaT: 'east', kyotoT: 'west', hanshinT: 'west', chukyoT: 'west', kawasakiD: 'local', oiD: 'local', sapporoT: 'north' };
+  const VENUE_REGION = { tokyoT: 'east', tokyoD: 'east', nakayamaT: 'east', kyotoT: 'west', kyotoInnerT: 'west', hanshinT: 'west', hanshinOuterT: 'west', chukyoT: 'west', chukyoD: 'west' };
 
   // オリジナルのファンファーレ（約13秒）。戻り値: 長さ(秒)
   function fanfare(def) {
     init();
     if (!ctx) return 0;
-    const grand = def && (def.month === 5 || def.month === 11 || def.month === 12);
+    const grand = def && def.grand;
     const fs = FANFARE_STYLE[grand ? 'grand' : (def && VENUE_REGION[def.venue]) || 'east'];
     const mul = Math.pow(2, fs.shift / 12);
     const bpm = fs.bpm;

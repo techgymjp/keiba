@@ -3,7 +3,7 @@ const I18N = (() => {
   const dict = {
     ja: {
       'doc.title': 'ダービージョッキー',
-      'logo.sub': 'G1 ROAD ・ 1月〜12月 全12戦',
+      'logo.sub': 'G1 ROAD ・ 2月〜12月 G1 全24戦',
       'logo.title': 'ダービー<span>ジョッキー</span>',
       'title.partner': 'あなたの相棒',
       'title.record': '戦績',
@@ -16,7 +16,7 @@ const I18N = (() => {
       'title.noStarts': '未出走',
       'title.recordV': '{n}戦{w}勝',
       'title.winsV': '{n}勝',
-      'title.next': '{y}年目 ・ 第{i}戦（{m}）',
+      'title.next': '{y}年目 ・ 第{i}戦／全{n}戦（{m}）',
       'hint.revealed': '脚質「{s}」が判明済み。全G1制覇を狙え！（3着内 {t}回）',
       'hint.unknown': 'まだ脚質は謎。戦績ノートの通過順と騎手メモを手がかりに。（3着内 {t}回）',
       'hint.new': '脚質（逃げ・先行・差し・追込）は生まれつき。乗りながら見極めろ。',
@@ -50,8 +50,8 @@ const I18N = (() => {
         '<li><b>先行</b>…前の方の好位でじっと構えると強い</li>' +
         '<li><b>差し</b>…中団で脚をため、直線で差し切る</li>' +
         '<li><b>追込</b>…最後方で我慢し、直線で一気に爆発</li>',
-      'help.seasonTitle': '年間12戦',
-      'help.season': '1月の川崎記念から12月の有馬記念まで、毎月ひとつの大レースに挑みます。競馬場・距離（1200m〜3000m）・芝ダート・左右回りはレースごとに違いますが、相棒の脚質はずっと同じ。直線が短いコースでは前が有利、長いコースでは末脚が生きる…コースの個性も味わってください。',
+      'help.seasonTitle': 'G1 全24戦',
+      'help.season': '2月のフェブラリーステークスから12月の有馬記念まで、JRAの平地G1全24戦に、G1のある週ごとに1戦ずつ挑みます。競馬場・距離（1200m〜3200m）・芝ダート・左右回りはレースごとに違いますが、相棒の脚質はずっと同じ。直線が短いコースでは前が有利、長いコースでは末脚が生きる…コースの個性も味わってください。',
       'help.clue': '合わない位置で走らせると、馬は力んだり、やる気をなくしたりします。レース中の馬の様子、レース後のコメント、通過順と上がり3Fから、相棒の脚質を見抜いてください。勝てば脚質が判明します。',
 
       'hist.title': '戦績ノート',
@@ -73,7 +73,7 @@ const I18N = (() => {
       'res.retryFail': '広告を読み込めませんでした。時間をおいて試してください。',
       'res.retrySkip': '最後まで見るとやり直せます。',
       'season.title': '{y}年目 シーズン総括',
-      'season.summary': '12戦 {w}勝 ・ 3着内 {t}回',
+      'season.summary': '{n}戦 {w}勝 ・ 3着内 {t}回',
       'season.great': '── 年度代表馬に選ばれました！',
       'season.good': '── 重賞ウイナーの仲間入り！',
       'season.none': '── 来年こそ、この馬の力を引き出そう。',
@@ -85,7 +85,7 @@ const I18N = (() => {
       'share.title': 'ダービージョッキー',
       'share.dialog': '結果をシェア',
       'share.tag': '#ダービージョッキー',
-      'share.season': '🏇 {name}と駆けた{y}年目、12戦{w}勝（3着内{t}回）！',
+      'share.season': '🏇 {name}と駆けた{y}年目、G1全{n}戦で{w}勝（3着内{t}回）！',
       'share.seasonWins': '勝ったレース：{list}',
       'share.seasonLast': '最後は{race}で{p}着。',
       'share.won': '🏆 {name}で{race}を制覇！',
@@ -163,7 +163,7 @@ const I18N = (() => {
     },
     en: {
       'doc.title': 'Derby Jockey',
-      'logo.sub': 'G1 ROAD ・ 12 BIG RACES, JAN TO DEC',
+      'logo.sub': 'G1 ROAD ・ ALL 24 G1 RACES, FEB TO DEC',
       'logo.title': 'Derby <span>Jockey</span>',
       'title.partner': 'Your horse',
       'title.record': 'Record',
@@ -176,7 +176,7 @@ const I18N = (() => {
       'title.noStarts': 'No starts',
       'title.recordV': '{n} starts, {w} wins',
       'title.winsV': '{n}',
-      'title.next': 'Year {y} ・ Race {i} ({m})',
+      'title.next': 'Year {y} ・ Race {i} of {n} ({m})',
       'hint.revealed': 'Running style revealed: {s}. Go for every big race! (Top 3: {t})',
       'hint.unknown': 'Its running style is still a mystery. Use the positions and jockey\'s notes in the race log as clues. (Top 3: {t})',
       'hint.new': 'Every horse is born with a running style — front-runner, stalker, closer or deep closer. Figure it out as you ride.',
@@ -210,8 +210,8 @@ const I18N = (() => {
         '<li><b>Stalker</b> — strongest sitting just behind the leaders</li>' +
         '<li><b>Closer</b> — saves its energy mid-pack and pounces in the straight</li>' +
         '<li><b>Deep closer</b> — waits at the very back, then explodes in the straight</li>',
-      'help.seasonTitle': '12 races a year',
-      'help.season': 'From the Kawasaki Kinen in January to the Arima Kinen in December, you ride in one big race every month. The track, distance (1200 m to 3000 m), turf or dirt, and direction change every time, but your horse\'s running style stays the same. Short straights favour the front, long straights reward a finishing kick — enjoy each track\'s character.',
+      'help.seasonTitle': 'All 24 G1 races',
+      'help.season': 'From the February Stakes to the Arima Kinen in December, you ride in all 24 of JRA\'s flat G1 races — one each week there is a G1. The track, distance (1200 m to 3200 m), turf or dirt, and direction change every time, but your horse\'s running style stays the same. Short straights favour the front, long straights reward a finishing kick — enjoy each track\'s character.',
       'help.clue': 'Ride your horse in the wrong position and it will fight you or lose interest. Read how it feels during the race, the jockey\'s notes afterwards, and its positions and last-600 m times to work out its running style. Win a race and the style is revealed.',
 
       'hist.title': 'Race log',
@@ -233,7 +233,7 @@ const I18N = (() => {
       'res.retryFail': 'Couldn\'t load an ad. Please try again later.',
       'res.retrySkip': 'Watch to the end to run the race again.',
       'season.title': 'Year {y} season review',
-      'season.summary': '12 races · {w} wins · {t} top-3 finishes',
+      'season.summary': '{n} races · {w} wins · {t} top-3 finishes',
       'season.great': '— Named Horse of the Year!',
       'season.good': '— A big-race winner!',
       'season.none': '— Next year, bring out the best in this horse.',
@@ -245,7 +245,7 @@ const I18N = (() => {
       'share.title': 'Derby Jockey',
       'share.dialog': 'Share your result',
       'share.tag': '#DerbyJockey',
-      'share.season': '🏇 Year {y} with {name}: {w} wins from 12 races ({t} top-3 finishes)!',
+      'share.season': '🏇 Year {y} with {name}: {w} wins from all {n} G1 races ({t} top-3 finishes)!',
       'share.seasonWins': 'Won: {list}',
       'share.seasonLast': 'Finished {p} in the {race}.',
       'share.won': '🏆 Won the {race} with {name}!',
@@ -345,6 +345,10 @@ const I18N = (() => {
   function month(m) {
     return lang === 'en' ? MONTHS_EN[m - 1] : m + '月';
   }
+  // 開催日（ja: 6月1日 / en: Jun 1）
+  function date(m, d) {
+    return lang === 'en' ? `${MONTHS_EN[m - 1]} ${d}` : `${m}月${d}日`;
+  }
   // 順位（ja: 3 / en: 3rd）。「3着」「3番手」「3番人気」などの数字部分
   function ord(n) {
     if (lang !== 'en') return String(n);
@@ -373,7 +377,7 @@ const I18N = (() => {
   }
 
   return {
-    t, month, ord, apply, setLang,
+    t, month, date, ord, apply, setLang,
     get lang() { return lang; },
     onChange(f) { listeners.push(f); },
   };

@@ -15,29 +15,45 @@
     tokyoD: { name: '東京', en: 'Tokyo', dir: 1, S: 501, P: 130, R: 103, width: 22 },
     nakayamaT: { name: '中山', en: 'Nakayama', dir: -1, S: 310, P: 200, R: 110, width: 22 },
     chukyoT: { name: '中京', en: 'Chukyo', dir: 1, S: 412, P: 150, R: 110, width: 24 },
-    hanshinT: { name: '阪神', en: 'Hanshin', dir: -1, S: 356, P: 150, R: 115, width: 22 },
-    kyotoT: { name: '京都', en: 'Kyoto', dir: -1, S: 404, P: 180, R: 112, width: 24 },
-    sapporoT: { name: '札幌', en: 'Sapporo', dir: -1, S: 266, P: 150, R: 120, width: 22 },
-    kawasakiD: { name: '川崎', en: 'Kawasaki', dir: 1, S: 300, P: 100, R: 80, width: 21 },
-    oiD: { name: '大井', en: 'Oi', dir: -1, S: 386, P: 150, R: 98, width: 22 },
+    chukyoD: { name: '中京', en: 'Chukyo', dir: 1, S: 410, P: 120, R: 95, width: 22 },
+    hanshinT: { name: '阪神', en: 'Hanshin', dir: -1, S: 356, P: 150, R: 115, width: 22 }, // 内回り
+    hanshinOuterT: { name: '阪神', en: 'Hanshin', dir: -1, S: 474, P: 150, R: 134, width: 24 }, // 外回り
+    kyotoT: { name: '京都', en: 'Kyoto', dir: -1, S: 404, P: 180, R: 112, width: 24 }, // 外回り
+    kyotoInnerT: { name: '京都', en: 'Kyoto', dir: -1, S: 328, P: 150, R: 105, width: 22 }, // 内回り
   };
 
-  // 年間12戦（1月〜12月）
-  // JRAは1・7・8月にG1が無いため、1月と7月は地方の交流JpnI、8月は夏の最高峰・札幌記念(G2)
+  // 1シーズン = JRA の平地G1 全24戦（2025年の開催日程。G1のある週だけ、週に1レース）
+  // date: [月, 日] / grand: ファンファーレを大一番の版に
+  const G = (o) => Object.assign({ grade: 'G1', surface: 'turf', field: 18, sky: 'day' }, o);
   const CALENDAR = [
-    { month: 1, name: '川崎記念', en: 'Kawasaki Kinen', grade: 'JpnI', venue: 'kawasakiD', surface: 'dirt', length: 2100, field: 14, sky: 'day' },
-    { month: 2, name: 'フェブラリーステークス', en: 'February Stakes', grade: 'G1', venue: 'tokyoD', surface: 'dirt', length: 1600, field: 16, sky: 'day' },
-    { month: 3, name: '高松宮記念', en: 'Takamatsunomiya Kinen', grade: 'G1', venue: 'chukyoT', surface: 'turf', length: 1200, field: 18, sky: 'day' },
-    { month: 4, name: '皐月賞', en: 'Satsuki Sho', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 2000, field: 18, sky: 'day' },
-    { month: 5, name: '日本ダービー', en: 'Japanese Derby', grade: 'G1', venue: 'tokyoT', surface: 'turf', length: 2400, field: 18, sky: 'day', official: '東京優駿', officialEn: 'Tokyo Yushun' },
-    { month: 6, name: '宝塚記念', en: 'Takarazuka Kinen', grade: 'G1', venue: 'hanshinT', surface: 'turf', length: 2200, field: 18, sky: 'day' },
-    { month: 7, name: 'ジャパンダートダービー', en: 'Japan Dirt Derby', grade: 'JpnI', venue: 'oiD', surface: 'dirt', length: 2000, field: 16, sky: 'night' },
-    { month: 8, name: '札幌記念', en: 'Sapporo Kinen', grade: 'G2', venue: 'sapporoT', surface: 'turf', length: 2000, field: 16, sky: 'day' },
-    { month: 9, name: 'スプリンターズステークス', en: 'Sprinters Stakes', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 1200, field: 16, sky: 'day' },
-    { month: 10, name: '菊花賞', en: 'Kikuka Sho', grade: 'G1', venue: 'kyotoT', surface: 'turf', length: 3000, field: 18, sky: 'day' },
-    { month: 11, name: 'ジャパンカップ', en: 'Japan Cup', grade: 'G1', venue: 'tokyoT', surface: 'turf', length: 2400, field: 18, sky: 'day' },
-    { month: 12, name: '有馬記念', en: 'Arima Kinen', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 2500, field: 16, sky: 'dusk' },
+    G({ id: 'february', date: [2, 23], name: 'フェブラリーステークス', en: 'February Stakes', venue: 'tokyoD', surface: 'dirt', length: 1600, field: 16 }),
+    G({ id: 'takamatsunomiya', date: [3, 30], name: '高松宮記念', en: 'Takamatsunomiya Kinen', venue: 'chukyoT', length: 1200 }),
+    G({ id: 'osaka', date: [4, 6], name: '大阪杯', en: 'Osaka Hai', venue: 'hanshinT', length: 2000, field: 16 }),
+    G({ id: 'oka', date: [4, 13], name: '桜花賞', en: 'Oka Sho', venue: 'hanshinOuterT', length: 1600 }),
+    G({ id: 'satsuki', date: [4, 20], name: '皐月賞', en: 'Satsuki Sho', venue: 'nakayamaT', length: 2000 }),
+    G({ id: 'tennoSpring', date: [5, 4], name: '天皇賞（春）', en: 'Tenno Sho (Spring)', venue: 'kyotoT', length: 3200 }),
+    G({ id: 'nhkMile', date: [5, 11], name: 'NHKマイルカップ', en: 'NHK Mile Cup', venue: 'tokyoT', length: 1600 }),
+    G({ id: 'victoriaMile', date: [5, 18], name: 'ヴィクトリアマイル', en: 'Victoria Mile', venue: 'tokyoT', length: 1600 }),
+    G({ id: 'oaks', date: [5, 25], name: 'オークス', en: 'Japanese Oaks', venue: 'tokyoT', length: 2400, official: '優駿牝馬', officialEn: 'Yushun Himba' }),
+    G({ id: 'derby', date: [6, 1], name: '日本ダービー', en: 'Japanese Derby', venue: 'tokyoT', length: 2400, official: '東京優駿', officialEn: 'Tokyo Yushun', grand: true }),
+    G({ id: 'yasuda', date: [6, 8], name: '安田記念', en: 'Yasuda Kinen', venue: 'tokyoT', length: 1600 }),
+    G({ id: 'takarazuka', date: [6, 15], name: '宝塚記念', en: 'Takarazuka Kinen', venue: 'hanshinT', length: 2200 }),
+    G({ id: 'sprinters', date: [9, 28], name: 'スプリンターズステークス', en: 'Sprinters Stakes', venue: 'nakayamaT', length: 1200, field: 16 }),
+    G({ id: 'shuka', date: [10, 19], name: '秋華賞', en: 'Shuka Sho', venue: 'kyotoInnerT', length: 2000 }),
+    G({ id: 'kikuka', date: [10, 26], name: '菊花賞', en: 'Kikuka Sho', venue: 'kyotoT', length: 3000 }),
+    G({ id: 'tennoAutumn', date: [11, 2], name: '天皇賞（秋）', en: 'Tenno Sho (Autumn)', venue: 'tokyoT', length: 2000 }),
+    G({ id: 'elizabeth', date: [11, 16], name: 'エリザベス女王杯', en: 'Queen Elizabeth II Cup', venue: 'kyotoT', length: 2200 }),
+    G({ id: 'mileCS', date: [11, 23], name: 'マイルチャンピオンシップ', en: 'Mile Championship', venue: 'kyotoT', length: 1600 }),
+    G({ id: 'japanCup', date: [11, 30], name: 'ジャパンカップ', en: 'Japan Cup', venue: 'tokyoT', length: 2400, grand: true }),
+    G({ id: 'championsCup', date: [12, 7], name: 'チャンピオンズカップ', en: 'Champions Cup', venue: 'chukyoD', surface: 'dirt', length: 1800, field: 16 }),
+    G({ id: 'hanshinJF', date: [12, 14], name: '阪神ジュベナイルフィリーズ', en: 'Hanshin Juvenile Fillies', venue: 'hanshinOuterT', length: 1600 }),
+    G({ id: 'asahiFS', date: [12, 21], name: '朝日杯フューチュリティステークス', en: 'Asahi Hai Futurity Stakes', venue: 'hanshinOuterT', length: 1600 }),
+    G({ id: 'hopeful', date: [12, 27], name: 'ホープフルステークス', en: 'Hopeful Stakes', venue: 'nakayamaT', length: 2000 }),
+    G({ id: 'arima', date: [12, 28], name: '有馬記念', en: 'Arima Kinen', venue: 'nakayamaT', length: 2500, field: 16, sky: 'dusk', grand: true }),
   ];
+  CALENDAR.forEach((d) => { d.month = d.date[0]; d.day = d.date[1]; });
+  // 旧版（月1回の12戦）にあって今のカレンダーにないレース名（戦績ノートの英訳用）
+  const LEGACY_NAMES = { 川崎記念: 'Kawasaki Kinen', ジャパンダートダービー: 'Japan Dirt Derby', 札幌記念: 'Sapporo Kinen' };
 
   // ゴールから逆にたどってコースを組み立てる
   function buildCourse(def) {
@@ -125,6 +141,12 @@
     return L(n[0], n[1]);
   }
   function raceName(def) { return L(def.name, def.en); }
+  // 戦績の記録からレース名（id があれば今の言語で。旧版の記録は名前から引く）
+  function recordRaceName(r) {
+    const d = CALENDAR.find((x) => (r.raceId ? x.id === r.raceId : x.name === r.raceName));
+    if (d) return raceName(d);
+    return L(r.raceName || '', LEGACY_NAMES[r.raceName] || r.raceName || '');
+  }
   function officialName(def) { return def.official ? L(def.official, def.officialEn) : ''; }
   function venueName(v) { return L(v.name, v.en); }
   function styleName(key) { return L(STYLES[key].name, STYLES[key].en); }
@@ -256,7 +278,7 @@
   // レース生成
   // player: { name, style, ability } / def: CALENDAR の1レース
   function createRace(player, seed, def) {
-    def = def || CALENDAR[4];
+    def = def || CALENDAR.find((d) => d.id === 'derby');
     const course = buildCourse(def);
     const rnd = mulberry32(seed >>> 0);
     const N = def.field;
@@ -600,7 +622,7 @@
 
   const api = {
     VENUES, CALENDAR, STYLES, STYLE_KEYS, VBASE, HORSE_LEN,
-    setLang, raceName, officialName, venueName, styleName, sectionName, noteText,
+    setLang, raceName, recordRaceName, officialName, venueName, styleName, sectionName, noteText,
     buildCourse, createRace, step, analyze, sectionAt, isCurve, curveOverlap, inHome, marginText, formatTime, mulberry32, randomName, frameOf, passingText,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

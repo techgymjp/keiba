@@ -1,10 +1,11 @@
-// ゲーム進行（タイトル → ファンファーレ → ゲート → レース → 結果）。1月〜12月の12戦で1シーズン
+// ゲーム進行（タイトル → ファンファーレ → ゲート → レース → 結果）。JRA 平地G1 全24戦（週1回）で1シーズン
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'derby-jockey-save-v2';
   const OLD_SAVE_KEY = 'derby-jockey-save-v1';
   const CAL = Sim.CALENDAR;
+  const CAL_VER = 2; // 2 = JRA 平地G1 全24戦（週1回）
   const t = I18N.t;
   Sim.setLang(I18N.lang);
   // 実時間1秒あたりのレース内秒数（?speed=4 などで早送り。動作確認用）
@@ -23,7 +24,8 @@
       races: [], // 全レースの記録
       wins: 0,
       titles: [], // 勝ったレース
-      season: { year: 1, idx: 0, results: [] }, // 今シーズン（1月〜12月の12戦）
+      season: { year: 1, idx: 0, results: [] }, // 今シーズン（2月〜12月の G1 全24戦）
+      calVer: CAL_VER,
       lastSeason: null,
       revealed: false,
     };
@@ -31,13 +33,21 @@
   function loadSave() {
     try {
       const d = JSON.parse(localStorage.getItem(SAVE_KEY));
-      if (d && d.horse && Sim.STYLES[d.horse.style] && d.season) return d;
+      if (d && d.horse && Sim.STYLES[d.horse.style] && d.season) {
+        // 月1回・12戦だった頃のセーブは、相棒と戦績を残して今のシーズンだけ最初（フェブラリーS）から
+        if (d.calVer !== CAL_VER) {
+          d.season = { year: d.season.year + (d.season.results.length ? 1 : 0), idx: 0, results: [] };
+          d.calVer = CAL_VER;
+        }
+        return d;
+      }
     } catch (e) { /* 壊れていたら作り直す */ }
     // 旧版（ダービーのみ）のデータは、相棒と戦績を引き継いで1年目1月から
     try {
       const old = JSON.parse(localStorage.getItem(OLD_SAVE_KEY));
       if (old && old.horse && Sim.STYLES[old.horse.style]) {
         const d = newSave();
+        d.calVer = CAL_VER;
         d.horse = old.horse;
         d.wins = old.wins || 0;
         d.revealed = !!old.revealed;
@@ -58,10 +68,9 @@
     }
     return `${v.name} ${def.surface === 'dirt' ? 'ダ' : '芝'}${def.length}m ${v.dir > 0 ? '左' : '右'}回り・${def.field}頭`;
   }
-  // 戦績の月からレース名（言語を切り替えても訳されるように）
-  function raceNameOfMonth(m, fallback) {
-    const d = CAL.find((x) => x.month === m);
-    return d ? Sim.raceName(d) : fallback || '';
+  // 開催日（ja: 6月1日 / en: Jun 1）
+  function raceDate(def) {
+    return I18N.date(def.month, def.day);
   }
   function writeSave() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* 保存できなくても遊べる */ }
@@ -159,12 +168,12 @@
     $('wins').textContent = t('title.winsV', { n: save.titles.length });
     const def = nextDef();
     const se = save.season;
-    $('next-race').innerHTML = `<small>${t('title.next', { y: se.year, i: se.idx + 1, m: I18N.month(def.month) })}</small>
+    $('next-race').innerHTML = `<small>${t('title.next', { y: se.year, i: se.idx + 1, n: CAL.length, m: raceDate(def) })}</small>
       <b>${esc(Sim.raceName(def))}</b><span class="grade">${def.grade}</span><div class="spec">${raceSpec(def)}</div>`;
     $('season-strip').innerHTML = CAL.map((d, i) => {
       const r = se.results[i];
       const cls = r ? (r.place === 1 ? 'won' : r.place <= 3 ? 'placed' : 'ran') : i === se.idx ? 'next' : '';
-      return `<div class="m ${cls}" title="${I18N.month(d.month)} ${esc(Sim.raceName(d))}"><span>${I18N.month(d.month)}</span><b>${r ? r.place : i === se.idx ? '▶' : '・'}</b></div>`;
+      return `<div class="m ${cls}" title="${raceDate(d)} ${esc(Sim.raceName(d))}"><span>${d.month}/${d.day}</span><b>${r ? r.place : i === se.idx ? '▶' : '・'}</b></div>`;
     }).join('');
     $('style-label').textContent = save.revealed ? Sim.styleName(save.horse.style) : '？？？';
     $('style-hint').textContent = save.revealed
@@ -177,7 +186,7 @@
   function refreshHistory() {
     const rows = save.races.slice().reverse().map((r) => `<tr>
       <td>${r.year ? t('common.year', { y: r.year }) : ''}</td>
-      <td>${I18N.month(r.month)} ${esc(raceNameOfMonth(r.month, r.raceName))}</td>
+      <td>${r.day ? I18N.date(r.month, r.day) : I18N.month(r.month)} ${esc(Sim.recordRaceName(r))}</td>
       <td class="${r.place === 1 ? 'place-1' : ''}">${t('common.place', { p: I18N.ord(r.place) })}</td>
       <td>${esc(r.passing)}</td>
       <td>${t('hist.last3f', { t: r.last3f.toFixed(1), r: I18N.ord(r.last3fRank) })}</td>
@@ -411,7 +420,7 @@
     const p = race.player;
     const se = save.season;
     const official = Sim.officialName(curDef);
-    $('caption').innerHTML = `<div class="c1">${t('cap.head', { y: se.year, i: se.idx + 1, m: I18N.month(curDef.month), official: official ? ' ・ ' + official : '' })}</div>
+    $('caption').innerHTML = `<div class="c1">${t('cap.head', { y: se.year, i: se.idx + 1, m: raceDate(curDef), official: official ? ' ・ ' + official : '' })}</div>
       <div class="c2">${esc(Sim.raceName(curDef))}${I18N.lang === 'en' ? ` (${curDef.grade})` : `（${curDef.grade}）`}</div>
       <div class="c3">${t('cap.runner', { spec: raceSpec(curDef), num: p.num, name: esc(p.name), pop: I18N.ord(p.popularity) })}</div>
       <div class="c3" style="margin-top:14px;opacity:.7">${t('cap.skip', { k: isTouch ? t('cap.tap') : 'Enter' })}</div>`;
@@ -513,7 +522,7 @@
     if (!f.goal && race.result == null && race.horses.some((h) => h.finished)) {
       f.goal = true;
       const w = race.horses.filter((h) => h.finished).sort((a, b) => a.finishTime - b.finishTime)[0];
-      const key = curDef.month === 5 ? 'com.winDerby' : curDef.month === 12 ? 'com.winArima' : 'com.winRace';
+      const key = curDef.id === 'derby' ? 'com.winDerby' : curDef.id === 'arima' ? 'com.winArima' : 'com.winRace';
       say(w.isPlayer ? t(key, { name: w.name, race: Sim.raceName(curDef) }) : t('com.goal', { lead: horseLabel(w) }));
     }
   }
@@ -725,7 +734,9 @@
     }
     const rec = {
       year: se.year,
+      raceId: curDef.id,
       month: curDef.month,
+      day: curDef.day,
       raceName: curDef.name,
       place: p.place,
       passing,
@@ -745,19 +756,19 @@
       const wins = se.results.filter((r) => r.place === 1).length;
       const top3 = se.results.filter((r) => r.place <= 3).length;
       seasonHtml = `<div class="season-end"><h3>${t('season.title', { y: se.year })}</h3>
-        <div class="season-strip">${CAL.map((d, i) => `<div class="m ${se.results[i].place === 1 ? 'won' : se.results[i].place <= 3 ? 'placed' : 'ran'}"><span>${I18N.month(d.month)}</span><b>${se.results[i].place}</b><i>${esc(Sim.raceName(d))}</i></div>`).join('')}</div>
-        <p>${t('season.summary', { w: wins, t: top3 })} ${t(wins >= 6 ? 'season.great' : wins >= 1 ? 'season.good' : 'season.none')}</p></div>`;
+        <div class="season-strip">${CAL.map((d, i) => `<div class="m ${se.results[i].place === 1 ? 'won' : se.results[i].place <= 3 ? 'placed' : 'ran'}"><span>${d.month}/${d.day}</span><b>${se.results[i].place}</b><i>${esc(Sim.raceName(d))}</i></div>`).join('')}</div>
+        <p>${t('season.summary', { n: CAL.length, w: wins, t: top3 })} ${t(wins >= CAL.length / 2 ? 'season.great' : wins >= 1 ? 'season.good' : 'season.none')}</p></div>`;
       save.lastSeason = { year: se.year, results: se.results };
       save.season = { year: se.year + 1, idx: 0, results: [] };
     }
     writeSave();
     const nd = nextDef();
-    $('btn-again').textContent = t('res.next', { m: I18N.month(nd.month), race: Sim.raceName(nd) });
+    $('btn-again').textContent = t('res.next', { m: raceDate(nd), race: Sim.raceName(nd) });
     $('btn-again').classList.toggle('hidden', seasonDone);
     $('btn-season-end').classList.toggle('hidden', !seasonDone);
 
     $('res-headline').innerHTML = `
-      <div class="sub">${t('res.sub', { y: rec.year, m: I18N.month(curDef.month), race: esc(Sim.raceName(curDef)), g: curDef.grade, num: p.num, name: esc(p.name) })}</div>
+      <div class="sub">${t('res.sub', { y: rec.year, m: raceDate(curDef), race: esc(Sim.raceName(curDef)), g: curDef.grade, num: p.num, name: esc(p.name) })}</div>
       <div class="place ${won ? 'win' : ''}">${won ? t('res.won', { race: esc(Sim.raceName(curDef)) }) : t('common.place', { p: I18N.ord(p.place) })}</div>
       <div class="sub">${t('res.line', { t: Sim.formatTime(p.finishTime), p: passing, f: p.last3f.toFixed(1), r: I18N.ord(p.last3fRank) })}</div>${reveal}`;
     const rowFor = (h, i) => {
@@ -782,7 +793,7 @@
       const t3 = last.results.filter((r) => r.place <= 3).length;
       const wonNames = CAL.filter((d, i) => last.results[i].place === 1).map((d) => Sim.raceName(d));
       const marks = last.results.map((r) => (r.place === 1 ? '🥇' : r.place === 2 ? '🥈' : r.place === 3 ? '🥉' : '・')).join('');
-      shareText = t('share.season', { name: p.name, y: last.year, w, t: t3 }) + `\n${marks}\n` +
+      shareText = t('share.season', { name: p.name, y: last.year, n: CAL.length, w, t: t3 }) + `\n${marks}\n` +
         (wonNames.length ? t('share.seasonWins', { list: wonNames.join(t('share.listSep')) }) + '\n' : '') +
         t('share.seasonLast', { race: Sim.raceName(curDef), p: I18N.ord(p.place) }) + ' ' + tag;
     } else {

@@ -820,7 +820,7 @@
     }
   }
 
-  setCourse(Sim.buildCourse(Sim.CALENDAR[4]));
+  setCourse(Sim.buildCourse(Sim.CALENDAR.find((d) => d.id === 'derby')));
 
   window.Render = { setCourse, draw, drawRider, drawGateOverlay, drawMinimap, horseLook, worldAt, trackAt };
 })();
