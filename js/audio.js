@@ -229,5 +229,13 @@
     [NOTE.C5, NOTE.E5, NOTE.G5, NOTE.C6].forEach((f, i) => brass(f, t + i * 0.12, 0.5, 0.06));
   }
 
-  window.GameAudio = { init, fanfare, setCrowd, gate, whip, hoof, chime, setMuted, isMuted: () => muted };
+  // アプリが裏に回ったときや広告の表示中は音を止める
+  function suspend() {
+    if (ctx && ctx.state === 'running') ctx.suspend();
+  }
+  function resume() {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
+  window.GameAudio = { init, fanfare, setCrowd, gate, whip, hoof, chime, setMuted, isMuted: () => muted, suspend, resume };
 })();

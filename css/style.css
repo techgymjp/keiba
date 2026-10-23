@@ -16,6 +16,7 @@ html, body {
 
 /* ---- 画面共通 ---- */
 .screen {
+  touch-action: pan-y; /* 画面全体はジェスチャー無効だが、パネルは指でスクロールできるように */
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
   padding: 16px;
@@ -56,6 +57,16 @@ button.primary {
   flex: 1;
 }
 button.primary:hover { filter: brightness(1.08); }
+/* タイトル画面の下：バージョン・プライバシーポリシー・広告の設定 */
+.legal { margin: 10px 0 0; font-size: 12px; color: #9fb79f; text-align: center; }
+.legal a { color: #c7b07a; }
+.legal #build-info:not(:empty)::after { content: ' ｜ '; }
+
+/* リワード広告でやり直し */
+#retry-box { margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+button.retry { background: rgba(233, 196, 106, 0.15); border-color: #e9c46a; color: #ffe8a8; font-weight: bold; }
+#retry-msg { font-size: 12px; color: #9fb79f; }
+
 /* シェア */
 .share-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
 button.share { background: #111; border-color: #555; font-size: 14px; padding: 9px 16px; }
@@ -215,4 +226,53 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   .buttons button.primary { flex-basis: 100%; }
   .tgroup button { width: 58px; height: 58px; }
   .hist td.memo { min-width: 160px; }
+}
+
+/* ---- 横向きのスマホ（高さが小さい画面）：Android アプリは横画面固定 ---- */
+@media (max-height: 500px) {
+  .screen { padding: 8px; align-items: flex-start; }
+  .panel { padding: 12px 16px 10px; border-radius: 10px; }
+  h2 { font-size: 18px; margin-bottom: 6px; }
+  p, li { font-size: 13px; line-height: 1.5; }
+  button { padding: 8px 14px; font-size: 14px; }
+  .buttons { margin-top: 10px; gap: 8px; }
+  /* タイトル：左に馬の情報、右にボタン */
+  #title .panel { max-width: 860px; display: grid; grid-template-columns: 1fr 210px; column-gap: 14px; align-items: start; }
+  #title .logo { grid-column: 1 / -1; margin-bottom: 6px; display: flex; align-items: baseline; justify-content: center; gap: 14px; }
+  .logo h1 { font-size: 26px; margin: 0; }
+  .logo-sub { font-size: 10px; }
+  #title .horse-card { grid-column: 1; grid-row: 2 / span 3; padding: 10px; }
+  #title .buttons { grid-column: 2; margin-top: 0; flex-direction: column; }
+  #title .buttons button { width: 100%; flex: none; }
+  #title #btn-newhorse { grid-column: 2; margin-top: 4px; }
+  #title .legal { grid-column: 2; margin-top: 4px; font-size: 11px; }
+  #horse-name { font-size: 18px; }
+  .stats { margin-top: 6px; }
+  .stats b { font-size: 15px; }
+  #next-race { margin-top: 8px; padding: 6px 10px; }
+  #next-race b { font-size: 16px; }
+  .season-strip { margin-top: 6px; }
+  .hint { margin-top: 6px; font-size: 11px; }
+  /* 結果 */
+  #res-headline .place { font-size: 36px; }
+  #res-headline .sub { font-size: 12px; }
+  .hist td, .res td, .hist th, .res th { padding: 3px 6px; }
+  #res-notes { margin-top: 8px; padding: 6px 10px; }
+  .share-row, #retry-box { margin-top: 8px; }
+  /* レース中の HUD と操作ボタン */
+  .hud-top { top: 6px; left: 8px; right: 8px; }
+  .hud-box { padding: 3px 8px; min-width: 0; }
+  .hud-box .big { font-size: 20px; }
+  #commentary { top: 52px; font-size: 13px; }
+  #feel { font-size: 15px; }
+  .hud-bottom { bottom: 6px; left: 8px; right: 8px; }
+  #hud-stamina { width: 150px; }
+  #minimap { width: 150px; height: 102px; }
+  #center-msg { font-size: 36px; }
+  #touch { bottom: 0; top: auto; padding: 0 8px; align-items: flex-end; height: 0; }
+  #touch .tgroup.left { position: absolute; left: 8px; bottom: 74px; }
+  #touch .tgroup.right { position: absolute; right: 8px; bottom: 116px; }
+  .tgroup button { width: 54px; height: 54px; font-size: 13px; }
+  /* 時計の左どなり（タイトルではパネルの上端の余白） */
+  #btn-mute { bottom: auto; top: 6px; right: 100px; width: 32px; height: 32px; transform: none; }
 }

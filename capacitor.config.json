@@ -1,0 +1,8 @@
+{
+  "appId": "jp.techgym.keiba",
+  "appName": "ダービージョッキー",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0b1a10"
+  }
+}

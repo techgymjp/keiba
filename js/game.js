@@ -124,6 +124,9 @@
     if (phase === 'gate') actionPressed = true;
   });
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  // Android アプリ（Capacitor）で動いているか。Web 版では Capacitor が無いので何もしない
+  const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const plugin = (name) => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
 
   // ---- 画面 ----
   function show(id) {
@@ -183,7 +186,47 @@
     refreshTitle();
   });
   $('btn-start').addEventListener('click', () => startRace());
-  $('btn-again').addEventListener('click', () => startRace());
+  // 2 回に 1 回、次のレースの前に全画面広告を出す（Android アプリのみ）
+  let nextCount = 0;
+  let nextBusy = false;
+  $('btn-again').addEventListener('click', async () => {
+    if (nextBusy) return;
+    nextCount++;
+    if (Ads.available && nextCount % 2 === 0) {
+      nextBusy = true;
+      await Ads.showInterstitial();
+      nextBusy = false;
+    }
+    startRace();
+  });
+
+  // ---- リワード広告：負けたレースを1回だけやり直せる（Android アプリのみ） ----
+  let beforeResult = null; // 結果を記録する直前のセーブデータ
+  let retryUsed = false; // このレースでやり直しを使ったか
+  let retryBusy = false;
+  $('btn-retry').addEventListener('click', async () => {
+    if (retryBusy || !beforeResult) return;
+    retryBusy = true;
+    $('btn-retry').disabled = true;
+    $('retry-msg').textContent = '広告を読み込んでいます…';
+    const result = await Ads.showRewarded();
+    retryBusy = false;
+    $('btn-retry').disabled = false;
+    if (result === 'unavailable') {
+      $('retry-msg').textContent = '広告を読み込めませんでした。時間をおいて試してください。';
+      return;
+    }
+    if (result !== 'rewarded') {
+      $('retry-msg').textContent = '最後まで見るとやり直せます。';
+      return;
+    }
+    // 結果を記録する前の状態に戻して、同じレースをもう一度
+    save = JSON.parse(beforeResult);
+    writeSave();
+    beforeResult = null;
+    retryUsed = true;
+    startRace(true);
+  });
   $('btn-season-end').addEventListener('click', () => toTitle());
 
   // ---- シェア ----
@@ -198,6 +241,14 @@
   }
   $('btn-share').addEventListener('click', async () => {
     const url = shareUrl();
+    const nativeShare = plugin('Share');
+    if (nativeShare) {
+      // Android アプリ：Android の共有メニュー
+      try {
+        await nativeShare.share({ title: 'ダービージョッキー', text: shareText, url, dialogTitle: '結果をシェア' });
+      } catch (e) { /* キャンセル */ }
+      return;
+    }
     if (navigator.share) {
       // スマホ：OSの共有シート（X・LINE・メッセージなど）
       try {
@@ -246,6 +297,44 @@
     if (paused) show('pause'); else show(null);
   }
 
+  // アプリが裏に回ったら一時停止して音を止める
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (!paused && (phase === 'race' || phase === 'gate')) togglePause();
+      if (phase === 'fanfare') skipFanfare = true; // 戻ったらゲート入りから
+      GameAudio.suspend();
+    } else if (!Ads.showing) {
+      GameAudio.resume();
+    }
+  });
+  // Android の戻るボタン：レース中は一時停止、ほかの画面では戻る、タイトル・結果画面ではアプリを終了
+  if (plugin('App')) {
+    plugin('App').addListener('backButton', () => {
+      const visible = (id) => !$(id).classList.contains('hidden');
+      if (phase === 'race' || phase === 'gate') togglePause();
+      else if (phase === 'fanfare') skipFanfare = true;
+      else if (phase === 'finish') return;
+      else if (visible('help') || visible('history')) show('title');
+      else plugin('App').exitApp();
+    });
+  }
+
+  // どのビルドが入っているか分かるよう、アプリ版はタイトル画面にバージョンを出す
+  if (window.APP_VERSION && window.APP_VERSION !== 'dev') $('build-info').textContent = window.APP_VERSION;
+  // EU など同意が必要な地域では、タイトル画面から広告の同意内容を変更できるようにする
+  Ads.initDone.then(() => { if (Ads.privacyOptionsRequired) $('ad-privacy').classList.remove('hidden'); });
+  $('ad-privacy-link').addEventListener('click', (e) => { e.preventDefault(); Ads.showPrivacyOptions(); });
+
+  // タッチ操作のときは、乗り方の説明をキーではなく画面のボタン名で
+  if (isTouch) {
+    $('help-keys').innerHTML = `
+      <tr><td><kbd>◀</kbd><kbd>▶</kbd></td><td>進路どり（体重を左右へ）。ボタンの「内へ・外へ」の向きはコースの回りに合わせて変わります。コーナーは内を回るほど距離得。前が詰まったら外へ。</td></tr>
+      <tr><td><kbd>追う</kbd></td><td>押している間、前傾して追う。ペースが上がるがスタミナを使う。</td></tr>
+      <tr><td><kbd>抑える</kbd></td><td>押している間、手綱を引いて後傾。ペースを落とし脚をためる。</td></tr>
+      <tr><td><kbd>ムチ</kbd></td><td>ゲートが開いた瞬間に押すと好スタート。直線では末脚を引き出す。早すぎるムチは馬が嫌がる。</td></tr>
+      <tr><td><kbd>♪</kbd></td><td>消音${NATIVE ? '（レース中に戻るボタンで一時停止）' : ''}</td></tr>`;
+  }
+
   // ---- 状態 ----
   let phase = 'title';
   let race = null;
@@ -273,7 +362,8 @@
     show('title');
   }
 
-  function startRace() {
+  function startRace(isRetry) {
+    if (!isRetry) retryUsed = false;
     GameAudio.init();
     const v = $('horse-name').value.trim();
     if (v) { save.horse.name = v.slice(0, 10); writeSave(); }
@@ -611,6 +701,7 @@
     const passing = Sim.passingText(race, p);
     const won = p.place === 1;
     const se = save.season;
+    beforeResult = JSON.stringify(save); // リワード広告でやり直すときに戻す状態
     let reveal = '';
     if (won) {
       save.wins++;
@@ -687,6 +778,9 @@
       shareText = `${head}\n${raceSpec(curDef)}\nタイム ${Sim.formatTime(p.finishTime)} ／ 通過順 ${passing} ／ 上がり3F ${p.last3f.toFixed(1)}\n${tag}`;
     }
     shareMsg('');
+    // 負けたレースは、広告を見て1回だけやり直せる（Android アプリのみ）
+    $('retry-box').classList.toggle('hidden', !(Ads.available && !won && !retryUsed));
+    $('retry-msg').textContent = '';
     show('result');
   }
 

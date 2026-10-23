@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ダービージョッキー</string>
+    <string name="title_activity_main">ダービージョッキー</string>
+    <string name="package_name">jp.techgym.keiba</string>
+    <string name="custom_url_scheme">jp.techgym.keiba</string>
+    <!-- AdMob のアプリ ID。いまは Google 公式のテスト用アプリ ID。AdMob でこのアプリを登録したら本番の ID（ca-app-pub-…~…）に差し替える -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+</resources>
