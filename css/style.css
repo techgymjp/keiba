@@ -15,7 +15,9 @@ html, body {
 .hidden { display: none !important; }
 
 /* ---- 画面共通 ---- */
+:root { --banner-h: 0px; } /* 画面下のバナー広告の高さ（Android アプリでバナーを出しているとき） */
 .screen {
+  padding-bottom: calc(16px + var(--banner-h)) !important;
   touch-action: pan-y; /* 画面全体はジェスチャー無効だが、パネルは指でスクロールできるように */
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;

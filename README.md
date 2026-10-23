@@ -102,12 +102,11 @@ Android アプリでのみ広告を表示します（Web 版には広告は出�
 
 | 広告 | タイミング |
 | --- | --- |
-| インタースティシャル（全画面） | 結果画面で「次走」を押したとき、毎回（1 レースに 1 回） |
+| バナー | タイトル画面・一時停止画面・結果画面の下（レース中は出さない） |
+| インタースティシャル（全画面） | 新しいレースへ進むとき（出走する・次走）、タイトルへ戻るとき、一時停止から再開するとき。ただし前回から 60 秒以内は出さない（`js/ads.js` の `INTERSTITIAL_GAP_MS`） |
 | リワード | 勝てなかったレースの結果画面で「広告を見て、このレースをやり直す」を選ぶと、結果を取り消して同じレースにもう一度挑戦（1 レース 1 回まで） |
 
-- **いまは AdMob 未登録のため、Google のテスト用 ID が入っています。** AdMob でアプリを登録したら次を差し替えます
-  - アプリ ID（`ca-app-pub-…~…`）：`android/app/src/main/res/values/strings.xml` の `admob_app_id`
-  - 広告ユニット ID（インタースティシャル・リワード）：`js/ads.js` の `UNITS.production`（空のままだと Google Play 版では広告を出しません）
+- AdMob のアプリ ID は `android/app/src/main/res/values/strings.xml` の `admob_app_id`、広告ユニット ID（バナー・インタースティシャル・リワード）は `js/ads.js` の `UNITS.production` にあります。
 - EU・英国など同意が必要な地域では、初回起動時に Google の同意確認画面が出ます。その地域では、タイトル画面の「広告の設定」から同意内容をいつでも変更できます。
 - 動作確認用 APK（Release の `derby-jockey.apk`）は常に **Google のテスト広告** を表示します。自分でタップしても問題ありません。
 - Google Play 用の .aab をビルドするときだけ、CI が `ADMOB_MODE=production` で本番の広告に切り替えます（`scripts/build-web.js` が `js/ads-config.js` を書き換えます）。

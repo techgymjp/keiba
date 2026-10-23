@@ -3,21 +3,28 @@ const Ads = (() => {
   const UNITS = {
     // Google 公式のテスト用広告ユニット
     test: {
+      banner: 'ca-app-pub-3940256099942544/6300978111',
       interstitial: 'ca-app-pub-3940256099942544/1033173712',
       rewarded: 'ca-app-pub-3940256099942544/5224354917',
     },
-    // AdMob でこのアプリの広告ユニットを作ったら ID を入れる（空のままなら本番ビルドでは広告を出さない）
+    // AdMob の広告ユニット ID（空のものは本番ビルドでは出さない）
     production: {
-      interstitial: '',
-      rewarded: '',
+      banner: 'ca-app-pub-6411535997477460/2801937395',
+      interstitial: 'ca-app-pub-6411535997477460/7862692384',
+      rewarded: 'ca-app-pub-6411535997477460/5937780356',
     },
   };
   const RETRY_MS = 20000; // 読み込みに失敗したら少し待って再挑戦する
+  // 全画面広告の最短間隔。操作のたびに続けて出すのは AdMob のポリシー違反になりやすいので、これより短い間隔では出さない
+  const INTERSTITIAL_GAP_MS = 60000;
+  let lastInterstitial = -Infinity;
   const cap = window.Capacitor;
   const native = !!(cap && cap.isNativePlatform && cap.isNativePlatform());
   const testing = window.AD_MODE !== 'production';
   const ids = testing ? UNITS.test : UNITS.production;
-  const AdMob = native && cap.Plugins && ids.interstitial && ids.rewarded ? cap.Plugins.AdMob : null;
+  const AdMob = native && cap.Plugins ? cap.Plugins.AdMob : null;
+  const hasFullscreen = !!(AdMob && ids.interstitial && ids.rewarded); // 全画面・リワード広告を出せるか
+  const hasBanner = !!(AdMob && ids.banner);
 
   let ready = false; // 広告をリクエストしてよい状態（初期化と同意確認が済んだ）
   let showing = false;
@@ -52,6 +59,7 @@ const Ads = (() => {
 
   function finish(kind, result) {
     showing = false;
+    syncBanner();
     GameAudio.resume();
     const w = waiters[kind];
     waiters[kind] = null;
@@ -81,14 +89,60 @@ const Ads = (() => {
     AdMob.addListener('onRewardedVideoAdReward', () => { rewarded = true; });
     AdMob.addListener('onRewardedVideoAdDismissed', () => finish('reward', rewarded));
     AdMob.addListener('onRewardedVideoAdFailedToShow', () => finish('reward', false));
-    prepare('inter');
-    prepare('reward');
+    // バナーの高さが変わったら、画面の下にその分の余白を空ける（ボタンが隠れないように）
+    AdMob.addListener('bannerAdSizeChanged', (size) => {
+      // 隠したときは高さ 0 が来る（表示処理の完了前に届くこともあるので、届いた高さをそのまま使う）
+      document.documentElement.style.setProperty('--banner-h', (size && size.height ? size.height : 0) + 'px');
+    });
+    if (hasFullscreen) {
+      prepare('inter');
+      prepare('reward');
+    }
+    syncBanner();
+  }
+
+  // ---- バナー（タイトル・一時停止・結果画面の下に表示。レース中は隠す） ----
+  let bannerWanted = false; // ゲームが表示したいか
+  let bannerOn = false; // 実際に表示中か
+  let bannerCreated = false;
+  let bannerBusy = false;
+  async function syncBanner() {
+    if (!hasBanner || !ready || bannerBusy) return;
+    const want = bannerWanted && !showing;
+    if (want === bannerOn) return;
+    bannerBusy = true;
+    try {
+      if (want) {
+        if (bannerCreated) await AdMob.resumeBanner();
+        else {
+          await AdMob.showBanner({ adId: ids.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin: 0, isTesting: testing });
+          bannerCreated = true;
+        }
+      } else {
+        await AdMob.hideBanner();
+        document.documentElement.style.setProperty('--banner-h', '0px');
+      }
+      bannerOn = want;
+    } catch (e) {
+      // 読み込めなくてもゲームは続ける（次に画面が変わったときにまた試す）
+      if (!want) bannerOn = false;
+    } finally {
+      bannerBusy = false;
+    }
+    if ((bannerWanted && !showing) !== bannerOn) syncBanner(); // 処理中に表示したい状態が変わった
+  }
+  function setBanner(visible) {
+    bannerWanted = !!visible;
+    syncBanner();
   }
 
   // 全画面広告を表示し、閉じられたら resolve する（読み込めていないときは出さずにすぐ resolve）
   function showInterstitial() {
-    if (!AdMob || !ready || !slots.inter.loaded || showing) return Promise.resolve();
+    if (!hasFullscreen || !ready || !slots.inter.loaded || showing) return Promise.resolve();
+    if (Date.now() - lastInterstitial < INTERSTITIAL_GAP_MS) return Promise.resolve();
+    lastInterstitial = Date.now();
     showing = true;
+    syncBanner();
     slots.inter.loaded = false;
     GameAudio.suspend();
     return new Promise((resolve) => {
@@ -99,10 +153,11 @@ const Ads = (() => {
 
   // リワード広告を表示する。結果は 'rewarded'（最後まで見た）/ 'skipped'（途中で閉じた）/ 'unavailable'（読み込めなかった）
   async function showRewarded() {
-    if (!AdMob || showing) return 'unavailable';
+    if (!hasFullscreen || showing) return 'unavailable';
     await initDone;
     if (!ready || !(await ensureLoaded('reward', 8000))) return 'unavailable';
     showing = true;
+    syncBanner();
     slots.reward.loaded = false;
     GameAudio.suspend();
     return new Promise((resolve) => {
@@ -120,7 +175,9 @@ const Ads = (() => {
   const initDone = AdMob ? init() : Promise.resolve();
 
   return {
-    get available() { return !!AdMob; },
+    // 全画面・リワード広告が使えるか（Android アプリで、広告ユニット ID があるとき）
+    get available() { return hasFullscreen; },
+    setBanner,
     get showing() { return showing; },
     get privacyOptionsRequired() { return privacyRequired; },
     initDone,

@@ -4,6 +4,6 @@
     <string name="title_activity_main">Derby Jockey</string>
     <string name="package_name">jp.techgym.keiba</string>
     <string name="custom_url_scheme">jp.techgym.keiba</string>
-    <!-- AdMob のアプリ ID。いまは Google 公式のテスト用アプリ ID。AdMob でこのアプリを登録したら本番の ID（ca-app-pub-…~…）に差し替える -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- AdMob のアプリ ID -->
+    <string name="admob_app_id">ca-app-pub-6411535997477460~8823798140</string>
 </resources>

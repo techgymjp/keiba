@@ -119,7 +119,7 @@
       else keys[k] = true;
     }
     if (e.key === 'm' || e.key === 'M') toggleMute();
-    if (e.key === 'Escape') togglePause();
+    if (e.key === 'Escape') { if (paused) resumeFromPause(); else togglePause(); }
     if ((e.key === 'Enter' || e.key === ' ') && phase === 'fanfare') skipFanfare = true;
   });
   window.addEventListener('keyup', (e) => {
@@ -145,9 +145,12 @@
   const plugin = (name) => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
 
   // ---- 画面 ----
+  // バナー広告を出す画面（Android アプリのみ）
+  const BANNER_SCREENS = ['title', 'pause', 'result'];
   function show(id) {
     for (const s of document.querySelectorAll('.screen')) s.classList.add('hidden');
     if (id) $(id).classList.remove('hidden');
+    if (typeof Ads !== 'undefined') Ads.setBanner(BANNER_SCREENS.includes(id));
   }
 
   function waku(frame) {
@@ -201,18 +204,19 @@
     writeSave();
     refreshTitle();
   });
-  $('btn-start').addEventListener('click', () => startRace());
-  // 次のレースの前に毎回、全画面広告を出す（Android アプリのみ）
-  let nextBusy = false;
-  $('btn-again').addEventListener('click', async () => {
-    if (nextBusy) return;
+  // 全画面広告を出してから次へ（Android アプリのみ）。新しいレースへ・タイトルへ戻る・一時停止から再開のとき
+  let adBusy = false;
+  async function afterInterstitial(next) {
+    if (adBusy) return;
     if (Ads.available) {
-      nextBusy = true;
+      adBusy = true;
       await Ads.showInterstitial();
-      nextBusy = false;
+      adBusy = false;
     }
-    startRace();
-  });
+    next();
+  }
+  $('btn-start').addEventListener('click', () => afterInterstitial(() => startRace()));
+  $('btn-again').addEventListener('click', () => afterInterstitial(() => startRace()));
 
   // ---- リワード広告：負けたレースを1回だけやり直せる（Android アプリのみ） ----
   let beforeResult = null; // 結果を記録する直前のセーブデータ
@@ -241,7 +245,7 @@
     retryUsed = true;
     startRace(true);
   });
-  $('btn-season-end').addEventListener('click', () => toTitle());
+  $('btn-season-end').addEventListener('click', () => afterInterstitial(toTitle));
 
   // ---- シェア ----
   let shareText = '';
@@ -286,7 +290,7 @@
       window.prompt(t('share.prompt'), text);
     }
   });
-  $('btn-totitle').addEventListener('click', () => toTitle());
+  $('btn-totitle').addEventListener('click', () => afterInterstitial(toTitle));
   $('btn-help').addEventListener('click', () => show('help'));
   $('btn-history').addEventListener('click', () => { refreshHistory(); show('history'); });
   document.querySelectorAll('.back').forEach((b) => b.addEventListener('click', () => show('title')));
@@ -297,8 +301,8 @@
     refreshTitle();
   });
   $('btn-mute').addEventListener('click', toggleMute);
-  $('btn-resume').addEventListener('click', togglePause);
-  $('btn-quit').addEventListener('click', () => { paused = false; toTitle(); });
+  $('btn-resume').addEventListener('click', resumeFromPause);
+  $('btn-quit').addEventListener('click', () => afterInterstitial(() => { paused = false; toTitle(); }));
 
   function toggleMute() {
     GameAudio.setMuted(!GameAudio.isMuted());
@@ -309,6 +313,11 @@
     if (phase !== 'race' && phase !== 'gate') return;
     paused = !paused;
     if (paused) show('pause'); else show(null);
+  }
+  // 一時停止から再開するときは全画面広告のあとでレースに戻る（広告の間は止まったまま）
+  function resumeFromPause() {
+    if (!paused) return;
+    afterInterstitial(() => { if (paused) togglePause(); });
   }
 
   // アプリが裏に回ったら一時停止して音を止める
@@ -325,7 +334,7 @@
   if (plugin('App')) {
     plugin('App').addListener('backButton', () => {
       const visible = (id) => !$(id).classList.contains('hidden');
-      if (phase === 'race' || phase === 'gate') togglePause();
+      if (phase === 'race' || phase === 'gate') { if (paused) resumeFromPause(); else togglePause(); }
       else if (phase === 'fanfare') skipFanfare = true;
       else if (phase === 'finish') return;
       else if (visible('help') || visible('history')) show('title');
