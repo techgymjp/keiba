@@ -5,6 +5,8 @@
   const SAVE_KEY = 'derby-jockey-save-v2';
   const OLD_SAVE_KEY = 'derby-jockey-save-v1';
   const CAL = Sim.CALENDAR;
+  const t = I18N.t;
+  Sim.setLang(I18N.lang);
   // 実時間1秒あたりのレース内秒数（?speed=4 などで早送り。動作確認用）
   const SIM_SPEED = 1.6 * Math.min(8, Math.max(0.25, +new URLSearchParams(location.search).get('speed') || 1));
   const SIM_DT = 1 / 60;
@@ -49,12 +51,17 @@
   function nextDef() {
     return CAL[save.season.idx];
   }
-  function surfaceLabel(def) {
-    return def.surface === 'dirt' ? 'ダ' : '芝';
-  }
   function raceSpec(def) {
     const v = Sim.VENUES[def.venue];
-    return `${v.name} ${surfaceLabel(def)}${def.length}m ${v.dir > 0 ? '左' : '右'}回り・${def.field}頭`;
+    if (I18N.lang === 'en') {
+      return `${v.en} · ${def.surface === 'dirt' ? 'Dirt' : 'Turf'} ${def.length}m · ${v.dir > 0 ? 'left' : 'right'}-handed · ${def.field} runners`;
+    }
+    return `${v.name} ${def.surface === 'dirt' ? 'ダ' : '芝'}${def.length}m ${v.dir > 0 ? '左' : '右'}回り・${def.field}頭`;
+  }
+  // 戦績の月からレース名（言語を切り替えても訳されるように）
+  function raceNameOfMonth(m, fallback) {
+    const d = CAL.find((x) => x.month === m);
+    return d ? Sim.raceName(d) : fallback || '';
   }
   function writeSave() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* 保存できなくても遊べる */ }
@@ -148,39 +155,39 @@
     $('horse-name').value = save.horse.name;
     const n = save.races.length;
     const top3 = save.races.filter((r) => r.place <= 3).length;
-    $('rec').textContent = n ? `${n}戦${save.wins}勝` : '未出走';
-    $('wins').textContent = save.titles.length + '勝';
+    $('rec').textContent = n ? t('title.recordV', { n, w: save.wins }) : t('title.noStarts');
+    $('wins').textContent = t('title.winsV', { n: save.titles.length });
     const def = nextDef();
     const se = save.season;
-    $('next-race').innerHTML = `<small>${se.year}年目 ・ 第${se.idx + 1}戦（${def.month}月）</small>
-      <b>${esc(def.name)}</b><span class="grade">${def.grade}</span><div class="spec">${raceSpec(def)}</div>`;
+    $('next-race').innerHTML = `<small>${t('title.next', { y: se.year, i: se.idx + 1, m: I18N.month(def.month) })}</small>
+      <b>${esc(Sim.raceName(def))}</b><span class="grade">${def.grade}</span><div class="spec">${raceSpec(def)}</div>`;
     $('season-strip').innerHTML = CAL.map((d, i) => {
       const r = se.results[i];
       const cls = r ? (r.place === 1 ? 'won' : r.place <= 3 ? 'placed' : 'ran') : i === se.idx ? 'next' : '';
-      return `<div class="m ${cls}" title="${d.month}月 ${esc(d.name)}"><span>${d.month}月</span><b>${r ? r.place : i === se.idx ? '▶' : '・'}</b></div>`;
+      return `<div class="m ${cls}" title="${I18N.month(d.month)} ${esc(Sim.raceName(d))}"><span>${I18N.month(d.month)}</span><b>${r ? r.place : i === se.idx ? '▶' : '・'}</b></div>`;
     }).join('');
-    $('style-label').textContent = save.revealed ? Sim.STYLES[save.horse.style].name : '？？？';
+    $('style-label').textContent = save.revealed ? Sim.styleName(save.horse.style) : '？？？';
     $('style-hint').textContent = save.revealed
-      ? `脚質「${Sim.STYLES[save.horse.style].name}」が判明済み。全G1制覇を狙え！（3着内 ${top3}回）`
+      ? t('hint.revealed', { s: Sim.styleName(save.horse.style), t: top3 })
       : n
-        ? `まだ脚質は謎。戦績ノートの通過順と騎手メモを手がかりに。（3着内 ${top3}回）`
-        : '脚質（逃げ・先行・差し・追込）は生まれつき。乗りながら見極めろ。';
+        ? t('hint.unknown', { t: top3 })
+        : t('hint.new');
   }
 
   function refreshHistory() {
     const rows = save.races.slice().reverse().map((r) => `<tr>
-      <td>${r.year ? r.year + '年目' : ''}</td>
-      <td>${r.month}月 ${esc(r.raceName || '')}</td>
-      <td class="${r.place === 1 ? 'place-1' : ''}">${r.place}着</td>
+      <td>${r.year ? t('common.year', { y: r.year }) : ''}</td>
+      <td>${I18N.month(r.month)} ${esc(raceNameOfMonth(r.month, r.raceName))}</td>
+      <td class="${r.place === 1 ? 'place-1' : ''}">${t('common.place', { p: I18N.ord(r.place) })}</td>
       <td>${esc(r.passing)}</td>
-      <td>${r.last3f.toFixed(1)}（${r.last3fRank}位）</td>
+      <td>${t('hist.last3f', { t: r.last3f.toFixed(1), r: I18N.ord(r.last3fRank) })}</td>
       <td>${Sim.formatTime(r.time)}</td>
-      <td class="memo">${esc(r.memo)}</td></tr>`);
-    $('hist-body').innerHTML = rows.join('') || '<tr><td colspan="7">まだ出走していません。</td></tr>';
+      <td class="memo">${esc(Sim.noteText(r.memo))}</td></tr>`);
+    $('hist-body').innerHTML = rows.join('') || `<tr><td colspan="7">${t('hist.empty')}</td></tr>`;
   }
 
   $('horse-name').addEventListener('change', () => {
-    const v = $('horse-name').value.trim().slice(0, 10);
+    const v = $('horse-name').value.trim().slice(0, 18);
     if (v) save.horse.name = v;
     writeSave();
     refreshTitle();
@@ -208,16 +215,16 @@
     if (retryBusy || !beforeResult) return;
     retryBusy = true;
     $('btn-retry').disabled = true;
-    $('retry-msg').textContent = '広告を読み込んでいます…';
+    $('retry-msg').textContent = t('res.retryLoading');
     const result = await Ads.showRewarded();
     retryBusy = false;
     $('btn-retry').disabled = false;
     if (result === 'unavailable') {
-      $('retry-msg').textContent = '広告を読み込めませんでした。時間をおいて試してください。';
+      $('retry-msg').textContent = t('res.retryFail');
       return;
     }
     if (result !== 'rewarded') {
-      $('retry-msg').textContent = '最後まで見るとやり直せます。';
+      $('retry-msg').textContent = t('res.retrySkip');
       return;
     }
     // 結果を記録する前の状態に戻して、同じレースをもう一度
@@ -245,7 +252,7 @@
     if (nativeShare) {
       // Android アプリ：Android の共有メニュー
       try {
-        await nativeShare.share({ title: 'ダービージョッキー', text: shareText, url, dialogTitle: '結果をシェア' });
+        await nativeShare.share({ title: t('share.title'), text: shareText, url, dialogTitle: t('share.dialog') });
       } catch (e) { /* キャンセル */ }
       return;
     }
@@ -267,9 +274,9 @@
     const text = shareText + (shareUrl() ? '\n' + shareUrl() : '');
     try {
       await navigator.clipboard.writeText(text);
-      shareMsg('コピーしました');
+      shareMsg(t('share.copied'));
     } catch (e) {
-      window.prompt('この文章をコピーしてください', text);
+      window.prompt(t('share.prompt'), text);
     }
   });
   $('btn-totitle').addEventListener('click', () => toTitle());
@@ -277,7 +284,7 @@
   $('btn-history').addEventListener('click', () => { refreshHistory(); show('history'); });
   document.querySelectorAll('.back').forEach((b) => b.addEventListener('click', () => show('title')));
   $('btn-newhorse').addEventListener('click', () => {
-    if (!confirm('今の相棒と別れて、新しい馬に乗り替わりますか？\n（戦績と脚質はリセットされます）')) return;
+    if (!confirm(t('confirm.newHorse'))) return;
     save = newSave();
     writeSave();
     refreshTitle();
@@ -325,15 +332,21 @@
   Ads.initDone.then(() => { if (Ads.privacyOptionsRequired) $('ad-privacy').classList.remove('hidden'); });
   $('ad-privacy-link').addEventListener('click', (e) => { e.preventDefault(); Ads.showPrivacyOptions(); });
 
-  // タッチ操作のときは、乗り方の説明をキーではなく画面のボタン名で
-  if (isTouch) {
-    $('help-keys').innerHTML = `
-      <tr><td><kbd>◀</kbd><kbd>▶</kbd></td><td>進路どり（体重を左右へ）。ボタンの「内へ・外へ」の向きはコースの回りに合わせて変わります。コーナーは内を回るほど距離得。前が詰まったら外へ。</td></tr>
-      <tr><td><kbd>追う</kbd></td><td>押している間、前傾して追う。ペースが上がるがスタミナを使う。</td></tr>
-      <tr><td><kbd>抑える</kbd></td><td>押している間、手綱を引いて後傾。ペースを落とし脚をためる。</td></tr>
-      <tr><td><kbd>ムチ</kbd></td><td>ゲートが開いた瞬間に押すと好スタート。直線では末脚を引き出す。早すぎるムチは馬が嫌がる。</td></tr>
-      <tr><td><kbd>♪</kbd></td><td>消音${NATIVE ? '（レース中に戻るボタンで一時停止）' : ''}</td></tr>`;
+  // 乗り方の説明（タッチ操作のときはキーではなく画面のボタン名で）
+  function refreshHelp() {
+    $('help-keys').innerHTML = isTouch ? t('help.touchKeys', { native: NATIVE ? t('help.nativePause') : '' }) : t('help.keys');
   }
+
+  // 表示言語：タイトル画面で切り替え。HTML の文言は data-i18n、動的な文言はここで描き直す
+  function applyLang() {
+    Sim.setLang(I18N.lang);
+    I18N.apply();
+    refreshHelp();
+    refreshTitle();
+    refreshHistory();
+  }
+  document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => I18N.setLang(b.dataset.lang)));
+  I18N.onChange(applyLang);
 
   // ---- 状態 ----
   let phase = 'title';
@@ -366,15 +379,15 @@
     if (!isRetry) retryUsed = false;
     GameAudio.init();
     const v = $('horse-name').value.trim();
-    if (v) { save.horse.name = v.slice(0, 10); writeSave(); }
+    if (v) { save.horse.name = v.slice(0, 18); writeSave(); }
     curDef = nextDef();
     race = Sim.createRace(save.horse, (Math.random() * 1e9) | 0, curDef);
     Render.setCourse(race.course);
     steerDir = race.course.dir;
     // スマホのボタン表記：右回りは右が内
     const [bl, br] = document.querySelectorAll('#touch button[data-key="left"] small, #touch button[data-key="right"] small');
-    bl.textContent = steerDir > 0 ? '内へ' : '外へ';
-    br.textContent = steerDir > 0 ? '外へ' : '内へ';
+    bl.textContent = t(steerDir > 0 ? 'touch.in' : 'touch.out');
+    br.textContent = t(steerDir > 0 ? 'touch.out' : 'touch.in');
     race.player.startDelay = 999;
     show(null);
     phase = 'fanfare';
@@ -397,10 +410,11 @@
     $('touch').classList.add('hidden');
     const p = race.player;
     const se = save.season;
-    $('caption').innerHTML = `<div class="c1">${se.year}年目 第${se.idx + 1}戦 ・ ${curDef.month}月${curDef.official ? ' ・ ' + curDef.official : ''}</div>
-      <div class="c2">${esc(curDef.name)}（${curDef.grade}）</div>
-      <div class="c3">${raceSpec(curDef)} ／ ${p.num}番 ${esc(p.name)}（${p.popularity}番人気）</div>
-      <div class="c3" style="margin-top:14px;opacity:.7">${isTouch ? 'タップ' : 'Enter'}でスキップ</div>`;
+    const official = Sim.officialName(curDef);
+    $('caption').innerHTML = `<div class="c1">${t('cap.head', { y: se.year, i: se.idx + 1, m: I18N.month(curDef.month), official: official ? ' ・ ' + official : '' })}</div>
+      <div class="c2">${esc(Sim.raceName(curDef))}${I18N.lang === 'en' ? ` (${curDef.grade})` : `（${curDef.grade}）`}</div>
+      <div class="c3">${t('cap.runner', { spec: raceSpec(curDef), num: p.num, name: esc(p.name), pop: I18N.ord(p.popularity) })}</div>
+      <div class="c3" style="margin-top:14px;opacity:.7">${t('cap.skip', { k: isTouch ? t('cap.tap') : 'Enter' })}</div>`;
     $('caption').classList.remove('hidden');
     fanfareLen = GameAudio.fanfare(curDef) || 10;
   }
@@ -417,7 +431,7 @@
     gate = { readyAt: 1.6, openAt: 1.6 + 1.0 + Math.random() * 1.8, opened: false, open: 0, reacted: false, early: false };
     actionPressed = false;
     whipPressed = false;
-    centerMsg('ゲートイン');
+    centerMsg(t('msg.gateIn'));
     GameAudio.setCrowd(0.06);
     $('hud').classList.remove('hidden');
     if (isTouch) $('touch').classList.remove('hidden');
@@ -447,14 +461,14 @@
 
   // ---- 実況 ----
   function horseLabel(h) {
-    return h.isPlayer ? `${h.name}（あなた）` : `${h.num}番${h.name}`;
+    return h.isPlayer ? t('com.you', { name: h.name }) : t('com.horse', { num: h.num, name: h.name });
   }
   function lengthsBetween(a, b) {
     const d = (a.s - b.s) / 2.4;
-    if (d < 0.5) return '半馬身';
-    if (d < 1.2) return '1馬身';
-    if (d > 10) return '10馬身以上';
-    return Math.round(d) + '馬身';
+    if (d < 0.5) return t('len.half');
+    if (d < 1.2) return t('len.one');
+    if (d > 10) return t('len.many');
+    return t('len.n', { n: Math.round(d) });
   }
   function commentary() {
     const o = race.order;
@@ -464,50 +478,48 @@
     if (!f.start && race.t > 1.2) {
       f.start = true;
       const late = race.horses.filter((h) => !h.isPlayer && h.startDelay > 0.6);
-      say('スタートしました！' + (late.length ? ` ${late[0].num}番${late[0].name}は出遅れ。` : ' 各馬きれいなスタート。'));
+      say(t('com.start') + (late.length ? t('com.lateStart', { num: late[0].num, name: late[0].name }) : t('com.cleanStart')));
     }
     if (!f.hana && lead.s > 300) {
       f.hana = true;
-      say(lead.isPlayer ? `ハナを切ったのはあなたの${p.name}！` : `ハナを切ったのは${horseLabel(lead)}。${p.name}は${p.rank + 1}番手。`);
+      say(lead.isPlayer ? t('com.leadYou', { name: p.name }) : t('com.lead', { lead: horseLabel(lead), name: p.name, rank: I18N.ord(p.rank + 1) }));
     }
     const C = race.course;
     if (lead.s > comm.nextReport && lead.s < comm.lastCurve - 150) {
       comm.nextReport += 400;
-      say(`先頭${horseLabel(lead)}、リードは${lengthsBetween(lead, o[1])}。${p.rank === 0 ? '' : `${p.name}は${p.rank + 1}番手。`}`);
+      say(t('com.report', { lead: horseLabel(lead), len: lengthsBetween(lead, o[1]) }) + (p.rank === 0 ? '' : t('com.reportYou', { name: p.name, rank: I18N.ord(p.rank + 1) })));
     }
     if (!f.split && race.leaderSplits[C.splitAt] != null) {
       f.split = true;
-      const t = race.leaderSplits[C.splitAt];
+      const split = race.leaderSplits[C.splitAt];
       const par = C.splitAt / (Sim.VBASE * C.speed * 0.995);
-      const pace = t < par * 0.985 ? 'ハイペース！' : t > par * 1.03 ? 'スローペースです。' : '平均的な流れ。';
-      say(`${C.splitAt}m通過は${t.toFixed(1)}秒。${pace}`);
+      const pace = split < par * 0.985 ? t('com.fast') : split > par * 1.03 ? t('com.slow') : t('com.even');
+      say(t('com.split', { m: C.splitAt, t: split.toFixed(1) }) + pace);
     }
-    if (!f.c3 && lead.s > comm.lastCurve + 10 && comm.lastCurve < C.homeStretch) { f.c3 = true; say('3コーナーのカーブへ。各馬が動き出す！'); }
+    if (!f.c3 && lead.s > comm.lastCurve + 10 && comm.lastCurve < C.homeStretch) { f.c3 = true; say(t('com.turn3')); }
     if (!f.st && lead.s > C.homeStretch) {
       f.st = true;
-      say(`4コーナーを回って最後の直線！ ${C.name}の直線は${C.venue.S}m！ 先頭は${horseLabel(lead)}！`);
+      say(t('com.stretch', { venue: Sim.venueName(C.venue), s: C.venue.S, lead: horseLabel(lead) }));
       comm.nextStretch = phaseT + 3.5;
     }
     if (f.st && !f.goal && phaseT > comm.nextStretch && lead.s < C.length - 10) {
       comm.nextStretch = phaseT + 3.2;
       const rem = Math.round((C.length - lead.s) / 50) * 50;
-      let t = `残り${rem}m！ ${horseLabel(lead)}先頭、${horseLabel(o[1])}が迫る！`;
-      if (p.rank >= 2 && p.rank <= 5 && p.eff > 1.1) t = `残り${rem}m！ 外から${p.name}も伸びてくる！`;
-      if (p.rank === 0) t = `残り${rem}m！ ${p.name}が先頭！ このまま押し切るか！`;
-      say(t);
+      let line = t('com.remain', { m: rem, lead: horseLabel(lead), second: horseLabel(o[1]) });
+      if (p.rank >= 2 && p.rank <= 5 && p.eff > 1.1) line = t('com.remainYouClose', { m: rem, name: p.name });
+      if (p.rank === 0) line = t('com.remainYouLead', { m: rem, name: p.name });
+      say(line);
     }
     if (!f.goal && race.result == null && race.horses.some((h) => h.finished)) {
       f.goal = true;
       const w = race.horses.filter((h) => h.finished).sort((a, b) => a.finishTime - b.finishTime)[0];
-      const glory = curDef.month === 5 ? 'ダービー馬に輝きました' : curDef.month === 12 ? '有馬記念を制しました！ 暮れの中山に大歓声' : `${curDef.name}を制しました`;
-      say(w.isPlayer ? `${w.name}だ！ ${w.name}が今、${glory}！` : `${horseLabel(w)}、ゴールイン！`);
+      const key = curDef.month === 5 ? 'com.winDerby' : curDef.month === 12 ? 'com.winArima' : 'com.winRace';
+      say(w.isPlayer ? t(key, { name: w.name, race: Sim.raceName(curDef) }) : t('com.goal', { lead: horseLabel(w) }));
     }
   }
 
   // ---- 馬の様子（脚質のヒント） ----
-  const FEEL_FWD = ['ハミを噛んで力んでいる…', '行きたがって折り合いを欠いている', '少し掛かり気味だ…'];
-  const FEEL_BACK = ['行きっぷりが悪い…', '走る気をなくしかけている', 'どこかイライラしている'];
-  const FEEL_OK = ['リズムよく走れている', '気持ちよさそうに走っている', 'いい手応えで折り合っている'];
+
   function horseFeel(dtReal) {
     const p = race.player;
     if (p.zone !== feel.zone) { feel.zone = p.zone; feel.zoneT = 0; }
@@ -515,30 +527,30 @@
     const fl = feel.flags;
     if (p.justWhipped) {
       p.justWhipped = false;
-      if (p.s < race.course.spurtZone && p.s > 50) showFeel('🐴 ムチに驚いて嫌がっている！', 2.2);
+      if (p.s < race.course.spurtZone && p.s > 50) showFeel(t('feel.earlyWhip'), 2.2);
     }
     if (p.blocked && p.s > race.course.homeStretch && p.effort > 0 && phaseT - feel.last > 3) {
       feel.last = phaseT;
-      showFeel('前が壁！ ←→で進路を探せ', 2);
+      showFeel(t('feel.blocked', { keys: isTouch ? '◀▶' : '←→' }), 2);
       return;
     }
     if (!fl.spurt && p.s > race.course.spurtZone) {
       fl.spurt = true;
-      showFeel('勝負どころ… 仕掛けるならここからだ', 2.5);
+      showFeel(t('feel.spurt'), 2.5);
       feel.last = phaseT;
       return;
     }
     if (!fl.tired && p.stamina < 20 && p.s > 400) {
       fl.tired = true;
-      showFeel('🐴 手応えが怪しくなってきた…', 2.5);
+      showFeel(t('feel.tired'), 2.5);
       feel.last = phaseT;
       return;
     }
     if (p.s < 200 || p.s > race.course.homeStretch || phaseT - feel.last < 7) return;
     const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-    if (feel.zone === 'fwd' && feel.zoneT > 2.5) showFeel('🐴 ' + pick(FEEL_FWD), 3);
-    else if (feel.zone === 'back' && feel.zoneT > 2.5) showFeel('🐴 ' + pick(FEEL_BACK), 3);
-    else if (feel.zone === 'ok' && feel.zoneT > 6) showFeel('🐴 ' + pick(FEEL_OK), 2.5);
+    if (feel.zone === 'fwd' && feel.zoneT > 2.5) showFeel('🐴 ' + pick(t('feel.fwd')), 3);
+    else if (feel.zone === 'back' && feel.zoneT > 2.5) showFeel('🐴 ' + pick(t('feel.back')), 3);
+    else if (feel.zone === 'ok' && feel.zoneT > 6) showFeel('🐴 ' + pick(t('feel.ok')), 2.5);
     else return;
     feel.last = phaseT;
   }
@@ -546,18 +558,18 @@
   // ---- HUD ----
   function updateHud() {
     const p = race.player;
-    $('hud-field').textContent = race.N;
+    $('hud-field').textContent = t('hud.rank', { n: race.N });
     $('hud-rank').querySelector('.big').textContent = p.finished ? p.place != null ? p.place : p.rank + 1 : p.rank + 1;
     const rem = Math.max(0, race.course.length - Math.max(0, p.s));
     $('hud-dist').querySelector('.big').textContent = Math.ceil(rem);
-    $('hud-section').textContent = Sim.sectionAt(race.course, Math.max(0, p.s)).name;
+    $('hud-section').textContent = Sim.sectionName(Sim.sectionAt(race.course, Math.max(0, p.s)));
     $('hud-time').querySelector('.big').textContent = Sim.formatTime(p.finished ? p.finishTime : Math.max(0, race.t));
     const st = Math.max(0, p.stamina);
     const fill = $('hud-stamina').querySelector('.fill');
     fill.style.width = st + '%';
     fill.style.backgroundPosition = `${-(100 - st) * 1.4}px 0`;
-    const ride = p.effort > 0 ? (p.s >= race.course.spurtZone ? '追い出し！' : '押していく') : p.effort < 0 ? '抑えて脚をためる' : '馬なり';
-    $('hud-ride').textContent = ride + (p.drafting ? ' ・風よけ' : '') + (p.blocked ? ' ・前が詰まる' : '');
+    const ride = p.effort > 0 ? (p.s >= race.course.spurtZone ? t('hud.rideDrive') : t('hud.ridePush')) : p.effort < 0 ? t('hud.rideHold') : t('hud.rideEasy');
+    $('hud-ride').textContent = ride + (p.drafting ? t('hud.draft') : '') + (p.blocked ? t('hud.blocked') : '');
     Render.drawMinimap(mctx, mini.width, mini.height, race);
   }
 
@@ -590,13 +602,13 @@
       rider.gal += dt * 0.5;
       if (!gate.opened && phaseT > gate.readyAt && !gate.readyShown) {
         gate.readyShown = true;
-        centerMsg('体勢完了…');
+        centerMsg(t('msg.ready'));
         actionPressed = false;
       }
       if (!gate.opened && actionPressed && phaseT > gate.readyAt && !gate.early) {
         gate.early = true;
         actionPressed = false;
-        showFeel('🐴 ゲートの中で立ち上がった！', 2);
+        showFeel(t('feel.rear'), 2);
       }
       if (!gate.opened && phaseT >= gate.openAt) {
         gate.opened = true;
@@ -604,7 +616,7 @@
         actionPressed = false;
         GameAudio.gate();
         GameAudio.setCrowd(0.3);
-        centerMsg('スタート！');
+        centerMsg(t('msg.start'));
       }
       if (gate.opened) {
         gate.open = Math.min(1, gate.open + dt * 4);
@@ -613,8 +625,8 @@
           gate.reacted = true;
           let delay = gate.early ? 0.9 + react : react < 0.25 ? 0 : react;
           race.player.startDelay = race.t + delay * 0.6;
-          if (gate.early || react > 0.7) showFeel('出遅れた！', 2);
-          else if (react < 0.25) showFeel('好スタート！', 1.6);
+          if (gate.early || react > 0.7) showFeel(t('feel.late'), 2);
+          else if (react < 0.25) showFeel(t('feel.goodStart'), 1.6);
           actionPressed = false;
           whipPressed = false;
         }
@@ -637,7 +649,7 @@
         phase = 'finish';
         finishT = phaseT;
         const pl = race.horses.filter((h) => h.finished).length;
-        centerMsg(pl === 1 ? '1着！！' : 'ゴール');
+        centerMsg(pl === 1 ? t('msg.win') : t('msg.goal'));
         GameAudio.setCrowd(pl === 1 ? 0.8 : 0.4);
         if (pl === 1) GameAudio.chime();
       }
@@ -708,7 +720,7 @@
       save.titles.push({ year: se.year, name: curDef.name });
       if (!save.revealed) {
         save.revealed = true;
-        reveal = `<div class="reveal">相棒の脚質が判明！ ── <b>${Sim.STYLES[save.horse.style].name}</b></div>`;
+        reveal = `<div class="reveal">${t('res.reveal', { s: Sim.styleName(save.horse.style) })}</div>`;
       }
     }
     const rec = {
@@ -720,7 +732,7 @@
       last3f: p.last3f,
       last3fRank: p.last3fRank,
       time: p.finishTime,
-      memo: notes[0],
+      memo: notes[0], // { k, r } のキー（表示時に訳す）
     };
     save.races.push(rec);
     if (save.races.length > 240) save.races.shift();
@@ -732,22 +744,22 @@
       // シーズン総括のあと、同じ相棒で翌年へ（脚質は変わらない）
       const wins = se.results.filter((r) => r.place === 1).length;
       const top3 = se.results.filter((r) => r.place <= 3).length;
-      seasonHtml = `<div class="season-end"><h3>${se.year}年目 シーズン総括</h3>
-        <div class="season-strip">${CAL.map((d, i) => `<div class="m ${se.results[i].place === 1 ? 'won' : se.results[i].place <= 3 ? 'placed' : 'ran'}"><span>${d.month}月</span><b>${se.results[i].place}</b><i>${esc(d.name)}</i></div>`).join('')}</div>
-        <p>12戦 ${wins}勝 ・ 3着内 ${top3}回 ${wins >= 6 ? '── 年度代表馬に選ばれました！' : wins >= 1 ? '── 重賞ウイナーの仲間入り！' : '── 来年こそ、この馬の力を引き出そう。'}</p></div>`;
+      seasonHtml = `<div class="season-end"><h3>${t('season.title', { y: se.year })}</h3>
+        <div class="season-strip">${CAL.map((d, i) => `<div class="m ${se.results[i].place === 1 ? 'won' : se.results[i].place <= 3 ? 'placed' : 'ran'}"><span>${I18N.month(d.month)}</span><b>${se.results[i].place}</b><i>${esc(Sim.raceName(d))}</i></div>`).join('')}</div>
+        <p>${t('season.summary', { w: wins, t: top3 })} ${t(wins >= 6 ? 'season.great' : wins >= 1 ? 'season.good' : 'season.none')}</p></div>`;
       save.lastSeason = { year: se.year, results: se.results };
       save.season = { year: se.year + 1, idx: 0, results: [] };
     }
     writeSave();
     const nd = nextDef();
-    $('btn-again').textContent = `次走：${nd.month}月 ${nd.name}`;
+    $('btn-again').textContent = t('res.next', { m: I18N.month(nd.month), race: Sim.raceName(nd) });
     $('btn-again').classList.toggle('hidden', seasonDone);
     $('btn-season-end').classList.toggle('hidden', !seasonDone);
 
     $('res-headline').innerHTML = `
-      <div class="sub">${rec.year}年目 ${curDef.month}月 ${esc(curDef.name)}（${curDef.grade}）／ ${p.num}番 ${esc(p.name)}</div>
-      <div class="place ${won ? 'win' : ''}">${won ? `${esc(curDef.name)}制覇！` : p.place + '着'}</div>
-      <div class="sub">タイム ${Sim.formatTime(p.finishTime)} ／ 通過順 ${passing} ／ 上がり3F ${p.last3f.toFixed(1)}（${p.last3fRank}位）</div>${reveal}`;
+      <div class="sub">${t('res.sub', { y: rec.year, m: I18N.month(curDef.month), race: esc(Sim.raceName(curDef)), g: curDef.grade, num: p.num, name: esc(p.name) })}</div>
+      <div class="place ${won ? 'win' : ''}">${won ? t('res.won', { race: esc(Sim.raceName(curDef)) }) : t('common.place', { p: I18N.ord(p.place) })}</div>
+      <div class="sub">${t('res.line', { t: Sim.formatTime(p.finishTime), p: passing, f: p.last3f.toFixed(1), r: I18N.ord(p.last3fRank) })}</div>${reveal}`;
     const rowFor = (h, i) => {
       const prev = i > 0 ? res[i - 1].finishTime : h.finishTime;
       const margin = i === 0 ? '' : Sim.marginText(h.finishTime - prev);
@@ -761,21 +773,21 @@
       rows.push(rowFor(p, p.place - 1));
     }
     $('res-body').innerHTML = rows.join('');
-    $('res-notes').innerHTML = '<h3>騎手コメント</h3>' + notes.map((n) => `<p>・${esc(n)}</p>`).join('') + seasonHtml;
+    $('res-notes').innerHTML = `<h3>${t('res.notes')}</h3>` + notes.map((n) => `<p>${I18N.lang === 'en' ? '• ' : '・'}${esc(Sim.noteText(n))}</p>`).join('') + seasonHtml;
     // シェア文（シーズン最終戦はシーズン総括）
-    const tag = '#ダービージョッキー';
+    const tag = t('share.tag');
     if (seasonDone) {
       const last = save.lastSeason;
       const w = last.results.filter((r) => r.place === 1).length;
       const t3 = last.results.filter((r) => r.place <= 3).length;
-      const wonNames = CAL.filter((d, i) => last.results[i].place === 1).map((d) => d.name);
+      const wonNames = CAL.filter((d, i) => last.results[i].place === 1).map((d) => Sim.raceName(d));
       const marks = last.results.map((r) => (r.place === 1 ? '🥇' : r.place === 2 ? '🥈' : r.place === 3 ? '🥉' : '・')).join('');
-      shareText = `🏇 ${p.name}と駆けた${last.year}年目、12戦${w}勝（3着内${t3}回）！\n${marks}\n` +
-        (wonNames.length ? `勝ったレース：${wonNames.join('・')}\n` : '') +
-        `最後は${curDef.name}で${p.place}着。${tag}`;
+      shareText = t('share.season', { name: p.name, y: last.year, w, t: t3 }) + `\n${marks}\n` +
+        (wonNames.length ? t('share.seasonWins', { list: wonNames.join(t('share.listSep')) }) + '\n' : '') +
+        t('share.seasonLast', { race: Sim.raceName(curDef), p: I18N.ord(p.place) }) + ' ' + tag;
     } else {
-      const head = won ? `🏆 ${p.name}で${curDef.name}を制覇！` : `🏇 ${curDef.name}（${curDef.grade}）で${p.name}は${p.place}着`;
-      shareText = `${head}\n${raceSpec(curDef)}\nタイム ${Sim.formatTime(p.finishTime)} ／ 通過順 ${passing} ／ 上がり3F ${p.last3f.toFixed(1)}\n${tag}`;
+      const head = won ? t('share.won', { name: p.name, race: Sim.raceName(curDef) }) : t('share.race', { race: Sim.raceName(curDef), g: curDef.grade, name: p.name, p: I18N.ord(p.place) });
+      shareText = `${head}\n${raceSpec(curDef)}\n${t('share.line', { t: Sim.formatTime(p.finishTime), p: passing, f: p.last3f.toFixed(1) })}\n${tag}`;
     }
     shareMsg('');
     // 負けたレースは、広告を見て1回だけやり直せる（Android アプリのみ）
@@ -840,6 +852,8 @@
     }
   }
 
+  I18N.apply();
+  refreshHelp();
   refreshTitle();
   show('title');
   requestAnimationFrame(frame);

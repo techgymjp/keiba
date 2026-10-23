@@ -678,7 +678,7 @@
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.font = `bold ${u * 6}px sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText('ビシッ', cx + u * 30, H - u * 22);
+      ctx.fillText(window.I18N ? I18N.t('fx.whip') : 'ビシッ', cx + u * 30, H - u * 22);
     }
     // 手袋と袖
     for (const hnd of [hL, hR]) {

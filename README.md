@@ -58,6 +58,12 @@ python3 -m http.server 8000
 
 データはブラウザ（localStorage）に保存されます。「新しい馬に乗り替わる」で脚質ごとリセット。
 
+## 表示言語（日本語 / 英語）
+
+端末の言語が日本語なら日本語、それ以外は英語で表示します。タイトル画面の「日本語 / English」でいつでも切り替えられます（選んだ言語は保存）。
+画面の文言は `js/i18n.js`、レース名・競馬場・馬名・騎手コメントなどレースまわりの文言は `js/sim.js` にあります。
+Android のアプリ名も、日本語の端末では「ダービージョッキー」、それ以外では「Derby Jockey」になります。
+
 ## Web 版の公開（Vercel）
 
 `vercel.json` で、Vercel が `npm run build` を実行して `www/` を公開するよう設定しています（Android アプリに同梱するのと同じファイルです）。
@@ -144,6 +150,7 @@ All rights reserved. 著作権はテックジム株式会社に帰属します�
 | `js/render.js` | 疑似3Dの騎手目線描画、自馬の首・手綱・ムチ、ミニマップ |
 | `js/audio.js` | WebAudio による合成音（オリジナルのファンファーレ、蹄音、歓声、ムチ、ゲート） |
 | `js/game.js` | 進行管理、入力、実況、HUD、セーブ |
+| `js/i18n.js` | 表示言語（日本語 / 英語）の文言と切り替え |
 | `js/ads.js` / `js/ads-config.js` | AdMob 広告（Android アプリのみ） |
 | `js/build-info.js` | タイトル画面に出すバージョン（ビルド時に生成） |
 | `scripts/build-web.js` | Android 同梱・Vercel 公開用に `www/` を作る |

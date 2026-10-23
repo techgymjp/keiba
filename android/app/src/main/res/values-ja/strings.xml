@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <!-- 端末の言語が日本語のときのアプリ名（それ以外は values/strings.xml の英語名） -->
+    <string name="app_name">ダービージョッキー</string>
+    <string name="title_activity_main">ダービージョッキー</string>
+</resources>

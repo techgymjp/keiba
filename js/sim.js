@@ -2,36 +2,41 @@
 (function (root) {
   'use strict';
 
+  // ---- 表示言語（ゲーム側の I18N から setLang で切り替える。Node では日本語のまま） ----
+  let lang = 'ja';
+  function setLang(l) { lang = l === 'en' ? 'en' : 'ja'; }
+  const L = (ja, en) => (lang === 'en' ? en : ja);
+
   // ---- 競馬場（実際の寸法を簡略化した周回コース） ----
   // dir: 1=左回り, -1=右回り / S: 4角出口→ゴール / P: ゴール→1角 / R: コーナー半径
   // 両端が半円の周回路なので、向こう正面は必ずホームストレッチ(S+P)と同じ長さになる
   const VENUES = {
-    tokyoT: { name: '東京', dir: 1, S: 525, P: 150, R: 120, width: 24 },
-    tokyoD: { name: '東京', dir: 1, S: 501, P: 130, R: 103, width: 22 },
-    nakayamaT: { name: '中山', dir: -1, S: 310, P: 200, R: 110, width: 22 },
-    chukyoT: { name: '中京', dir: 1, S: 412, P: 150, R: 110, width: 24 },
-    hanshinT: { name: '阪神', dir: -1, S: 356, P: 150, R: 115, width: 22 },
-    kyotoT: { name: '京都', dir: -1, S: 404, P: 180, R: 112, width: 24 },
-    sapporoT: { name: '札幌', dir: -1, S: 266, P: 150, R: 120, width: 22 },
-    kawasakiD: { name: '川崎', dir: 1, S: 300, P: 100, R: 80, width: 21 },
-    oiD: { name: '大井', dir: -1, S: 386, P: 150, R: 98, width: 22 },
+    tokyoT: { name: '東京', en: 'Tokyo', dir: 1, S: 525, P: 150, R: 120, width: 24 },
+    tokyoD: { name: '東京', en: 'Tokyo', dir: 1, S: 501, P: 130, R: 103, width: 22 },
+    nakayamaT: { name: '中山', en: 'Nakayama', dir: -1, S: 310, P: 200, R: 110, width: 22 },
+    chukyoT: { name: '中京', en: 'Chukyo', dir: 1, S: 412, P: 150, R: 110, width: 24 },
+    hanshinT: { name: '阪神', en: 'Hanshin', dir: -1, S: 356, P: 150, R: 115, width: 22 },
+    kyotoT: { name: '京都', en: 'Kyoto', dir: -1, S: 404, P: 180, R: 112, width: 24 },
+    sapporoT: { name: '札幌', en: 'Sapporo', dir: -1, S: 266, P: 150, R: 120, width: 22 },
+    kawasakiD: { name: '川崎', en: 'Kawasaki', dir: 1, S: 300, P: 100, R: 80, width: 21 },
+    oiD: { name: '大井', en: 'Oi', dir: -1, S: 386, P: 150, R: 98, width: 22 },
   };
 
   // 年間12戦（1月〜12月）
   // JRAは1・7・8月にG1が無いため、1月と7月は地方の交流JpnI、8月は夏の最高峰・札幌記念(G2)
   const CALENDAR = [
-    { month: 1, name: '川崎記念', grade: 'JpnI', venue: 'kawasakiD', surface: 'dirt', length: 2100, field: 14, sky: 'day' },
-    { month: 2, name: 'フェブラリーステークス', grade: 'G1', venue: 'tokyoD', surface: 'dirt', length: 1600, field: 16, sky: 'day' },
-    { month: 3, name: '高松宮記念', grade: 'G1', venue: 'chukyoT', surface: 'turf', length: 1200, field: 18, sky: 'day' },
-    { month: 4, name: '皐月賞', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 2000, field: 18, sky: 'day' },
-    { month: 5, name: '日本ダービー', grade: 'G1', venue: 'tokyoT', surface: 'turf', length: 2400, field: 18, sky: 'day', official: '東京優駿' },
-    { month: 6, name: '宝塚記念', grade: 'G1', venue: 'hanshinT', surface: 'turf', length: 2200, field: 18, sky: 'day' },
-    { month: 7, name: 'ジャパンダートダービー', grade: 'JpnI', venue: 'oiD', surface: 'dirt', length: 2000, field: 16, sky: 'night' },
-    { month: 8, name: '札幌記念', grade: 'G2', venue: 'sapporoT', surface: 'turf', length: 2000, field: 16, sky: 'day' },
-    { month: 9, name: 'スプリンターズステークス', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 1200, field: 16, sky: 'day' },
-    { month: 10, name: '菊花賞', grade: 'G1', venue: 'kyotoT', surface: 'turf', length: 3000, field: 18, sky: 'day' },
-    { month: 11, name: 'ジャパンカップ', grade: 'G1', venue: 'tokyoT', surface: 'turf', length: 2400, field: 18, sky: 'day' },
-    { month: 12, name: '有馬記念', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 2500, field: 16, sky: 'dusk' },
+    { month: 1, name: '川崎記念', en: 'Kawasaki Kinen', grade: 'JpnI', venue: 'kawasakiD', surface: 'dirt', length: 2100, field: 14, sky: 'day' },
+    { month: 2, name: 'フェブラリーステークス', en: 'February Stakes', grade: 'G1', venue: 'tokyoD', surface: 'dirt', length: 1600, field: 16, sky: 'day' },
+    { month: 3, name: '高松宮記念', en: 'Takamatsunomiya Kinen', grade: 'G1', venue: 'chukyoT', surface: 'turf', length: 1200, field: 18, sky: 'day' },
+    { month: 4, name: '皐月賞', en: 'Satsuki Sho', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 2000, field: 18, sky: 'day' },
+    { month: 5, name: '日本ダービー', en: 'Japanese Derby', grade: 'G1', venue: 'tokyoT', surface: 'turf', length: 2400, field: 18, sky: 'day', official: '東京優駿', officialEn: 'Tokyo Yushun' },
+    { month: 6, name: '宝塚記念', en: 'Takarazuka Kinen', grade: 'G1', venue: 'hanshinT', surface: 'turf', length: 2200, field: 18, sky: 'day' },
+    { month: 7, name: 'ジャパンダートダービー', en: 'Japan Dirt Derby', grade: 'JpnI', venue: 'oiD', surface: 'dirt', length: 2000, field: 16, sky: 'night' },
+    { month: 8, name: '札幌記念', en: 'Sapporo Kinen', grade: 'G2', venue: 'sapporoT', surface: 'turf', length: 2000, field: 16, sky: 'day' },
+    { month: 9, name: 'スプリンターズステークス', en: 'Sprinters Stakes', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 1200, field: 16, sky: 'day' },
+    { month: 10, name: '菊花賞', en: 'Kikuka Sho', grade: 'G1', venue: 'kyotoT', surface: 'turf', length: 3000, field: 18, sky: 'day' },
+    { month: 11, name: 'ジャパンカップ', en: 'Japan Cup', grade: 'G1', venue: 'tokyoT', surface: 'turf', length: 2400, field: 18, sky: 'day' },
+    { month: 12, name: '有馬記念', en: 'Arima Kinen', grade: 'G1', venue: 'nakayamaT', surface: 'turf', length: 2500, field: 16, sky: 'dusk' },
   ];
 
   // ゴールから逆にたどってコースを組み立てる
@@ -64,11 +69,11 @@
     const curves = sections.filter((x) => x.type === 'curve');
     curves.forEach((c, i) => {
       const fromEnd = curves.length - 1 - i;
-      c.name = fromEnd % 2 === 0 ? '3〜4コーナー' : '1〜2コーナー';
+      c.key = fromEnd % 2 === 0 ? 'turn34' : 'turn12';
     });
     for (const x of sections) {
       if (x.type === 'curve') continue;
-      x.name = x.final ? '最後の直線' : x.chute ? 'スタート地点' : x.home ? 'スタンド前' : '向こう正面';
+      x.key = x.final ? 'stretch' : x.chute ? 'start' : x.home ? 'stands' : 'back';
     }
     const length = def.length;
     const homeStretch = length - v.S;
@@ -107,6 +112,23 @@
     };
   }
 
+  const SECTION_NAMES = {
+    turn34: ['3〜4コーナー', 'Far turn'],
+    turn12: ['1〜2コーナー', 'First turn'],
+    stretch: ['最後の直線', 'Home straight'],
+    start: ['スタート地点', 'Start chute'],
+    stands: ['スタンド前', 'Past the stands'],
+    back: ['向こう正面', 'Backstretch'],
+  };
+  function sectionName(sec) {
+    const n = SECTION_NAMES[sec.key];
+    return L(n[0], n[1]);
+  }
+  function raceName(def) { return L(def.name, def.en); }
+  function officialName(def) { return def.official ? L(def.official, def.officialEn) : ''; }
+  function venueName(v) { return L(v.name, v.en); }
+  function styleName(key) { return L(STYLES[key].name, STYLES[key].en); }
+
   function sectionAt(course, s) {
     const secs = course.sections;
     for (let i = 0; i < secs.length; i++) if (s < secs[i].end) return secs[i];
@@ -135,10 +157,10 @@
   // ---- 脚質 ----
   // pref: 道中で心地よい位置（0=先頭, 1=最後方）, kick: 末脚の爆発力
   const STYLES = {
-    nige: { key: 'nige', name: '逃げ', pref: 0.0, lo: 0.0, hi: 0.07, kick: 0.5, spurt: -275, relax: 0.9 },
-    senko: { key: 'senko', name: '先行', pref: 0.2, lo: 0.08, hi: 0.36, kick: 0.78, spurt: -175, relax: 0.85 },
-    sashi: { key: 'sashi', name: '差し', pref: 0.55, lo: 0.4, hi: 0.72, kick: 1.2, spurt: -115, relax: 0.8 },
-    oikomi: { key: 'oikomi', name: '追込', pref: 0.85, lo: 0.74, hi: 1.0, kick: 1.65, spurt: -75, relax: 0.74 },
+    nige: { key: 'nige', name: '逃げ', en: 'Front-runner', pref: 0.0, lo: 0.0, hi: 0.07, kick: 0.5, spurt: -275, relax: 0.9 },
+    senko: { key: 'senko', name: '先行', en: 'Stalker', pref: 0.2, lo: 0.08, hi: 0.36, kick: 0.78, spurt: -175, relax: 0.85 },
+    sashi: { key: 'sashi', name: '差し', en: 'Closer', pref: 0.55, lo: 0.4, hi: 0.72, kick: 1.2, spurt: -115, relax: 0.8 },
+    oikomi: { key: 'oikomi', name: '追込', en: 'Deep closer', pref: 0.85, lo: 0.74, hi: 1.0, kick: 1.65, spurt: -75, relax: 0.74 },
   };
   const STYLE_KEYS = ['nige', 'senko', 'sashi', 'oikomi'];
 
@@ -159,8 +181,13 @@
   const NAME_A = ['サクラ', 'キング', 'メイショウ', 'ゴールド', 'シルバー', 'ダイワ', 'エアー', 'マチカネ', 'トウカイ', 'ナリタ', 'スペシャル', 'グラス', 'ミスター', 'アドマイヤ', 'ハーツ', 'ディープ', 'オルフェ', 'ブラック', 'レッド', 'ホワイト', 'スカイ', 'ライジング', 'ヴィクトリー', 'ローズ', 'ミラクル', 'サンダー', 'ブレイブ', 'ノーブル'];
   const NAME_B = ['ボーイ', 'ヘイロー', 'スター', 'ウイング', 'ストーム', 'ブレイド', 'クラウン', 'ハート', 'フラッシュ', 'ドリーム', 'カイザー', 'ランナー', 'ソード', 'ムーン', 'エース', 'ファイター', 'フォース', 'ジェット', 'ロード', 'シャトル', 'タイガー', 'ペガサス', 'ノヴァ', 'レジェンド', 'アロー', 'リュウセイ'];
 
+  const NAME_A_EN = ['Sakura', 'King', 'Meisho', 'Gold', 'Silver', 'Daiwa', 'Air', 'Machikane', 'Tokai', 'Narita', 'Special', 'Grass', 'Mister', 'Admire', 'Hearts', 'Deep', 'Orfe', 'Black', 'Red', 'White', 'Sky', 'Rising', 'Victory', 'Rose', 'Miracle', 'Thunder', 'Brave', 'Noble'];
+  const NAME_B_EN = ['Boy', 'Halo', 'Star', 'Wing', 'Storm', 'Blade', 'Crown', 'Heart', 'Flash', 'Dream', 'Kaiser', 'Runner', 'Sword', 'Moon', 'Ace', 'Fighter', 'Force', 'Jet', 'Road', 'Shuttle', 'Tiger', 'Pegasus', 'Nova', 'Legend', 'Arrow', 'Ryusei'];
+
+  // 乱数の使い方は言語によらず同じ（同じ種なら同じ馬になる）
   function randomName(rnd) {
-    return NAME_A[Math.floor(rnd() * NAME_A.length)] + NAME_B[Math.floor(rnd() * NAME_B.length)];
+    const a = Math.floor(rnd() * NAME_A.length), b = Math.floor(rnd() * NAME_B.length);
+    return L(NAME_A[a] + NAME_B[b], NAME_A_EN[a] + ' ' + NAME_B_EN[b]);
   }
 
   // 枠番（JRA方式：頭数が8を超えると外枠から2頭ずつ）
@@ -504,9 +531,9 @@
   // 着差表記
   function marginText(dtSec) {
     const len = dtSec * 16.6 / 2.4; // 馬身
-    if (len < 0.05) return 'ハナ';
-    if (len < 0.15) return 'アタマ';
-    if (len < 0.3) return 'クビ';
+    if (len < 0.05) return L('ハナ', 'Nose');
+    if (len < 0.15) return L('アタマ', 'Head');
+    if (len < 0.3) return L('クビ', 'Neck');
     if (len < 0.6) return '1/2';
     if (len < 0.875) return '3/4';
     if (len < 10) {
@@ -516,7 +543,7 @@
       if (fr > 0.125) return whole + ' 1/4';
       return String(whole);
     }
-    return '大差';
+    return L('大差', 'Distance');
   }
 
   function formatTime(t) {
@@ -526,28 +553,54 @@
     return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
   }
 
-  // レース後の騎手コメント（適性のヒント）
+  // レース後の騎手コメント（適性のヒント）。{ k: キー, a: 値 } の配列で返し、表示は noteText で（戦績ノートは言語を切り替えても訳される）
+  const NOTES = {
+    fwdBig: ['道中ずっと力んで走っていました。もっと控えて脚をためた方がいいのかもしれません。', 'It fought me the whole way. Maybe it needs to be held up and saved for later.'],
+    fwdSmall: ['前半、少し力みがありました。', 'It was a bit keen early on.'],
+    backBig: ['後ろで揉まれて走る気をなくしていました。もっと前で競馬をさせたいですね。', 'It got crowded at the back and lost interest. I\'d like to ride it closer to the pace.'],
+    backSmall: ['道中の位置取りに少し不満そうでした。', 'It didn\'t seem happy with where it was running.'],
+    comfort: ['道中はリズムよく、気持ちよく走れていました。この形が合っているのかも。', 'It travelled in a lovely rhythm. This might be the way to ride it.'],
+    earlyWhip: ['早めのムチで馬が嫌がっていました。', 'It didn\'t like being whipped so early.'],
+    fastFinish: ['上がり3Fはメンバー中{r}位。最後の脚は確かです。', 'Its last 600 m was the {r} fastest in the field. It has a real finishing kick.'],
+    slowFinish: ['最後は伸びを欠きました（上がり3F {r}位）。', 'It didn\'t pick up at the end (last 600 m: {r}).'],
+    leftover: ['ゴール後も余力たっぷり。仕掛けが遅かったか、使いきれませんでした。', 'It still had plenty left after the line. I moved too late, or didn\'t use it all.'],
+    emptyEarly: ['直線入口で既に手応えがなく、苦しい競馬でした。', 'It was already running on empty at the top of the straight.'],
+    blocked: ['直線で前が壁になり、追い出しが遅れました。', 'I got boxed in during the straight and couldn\'t get going in time.'],
+    unknown: ['まだこの馬のことを掴みきれていません。いろいろ試してみましょう。', 'I still haven\'t figured this horse out. Let\'s try different things.'],
+  };
+  function ordinal(n) {
+    if (lang !== 'en') return String(n);
+    const t10 = n % 10, t100 = n % 100;
+    return n + (t100 >= 11 && t100 <= 13 ? 'th' : t10 === 1 ? 'st' : t10 === 2 ? 'nd' : t10 === 3 ? 'rd' : 'th');
+  }
+  function noteText(n) {
+    if (typeof n === 'string') return n; // 旧版のセーブ（文章のまま保存）
+    const t = NOTES[n.k];
+    if (!t) return '';
+    return L(t[0], t[1]).replace('{r}', n.r != null ? ordinal(n.r) : '');
+  }
   function analyze(race) {
     const h = race.player;
     const notes = [];
     const total = h.fwdStress + h.backStress;
-    if (h.fwdStress > 6) notes.push('道中ずっと力んで走っていました。もっと控えて脚をためた方がいいのかもしれません。');
-    else if (h.fwdStress > 2.5) notes.push('前半、少し力みがありました。');
-    if (h.backStress > 6) notes.push('後ろで揉まれて走る気をなくしていました。もっと前で競馬をさせたいですね。');
-    else if (h.backStress > 2.5) notes.push('道中の位置取りに少し不満そうでした。');
-    if (h.comfort > 70 && total < 3) notes.push('道中はリズムよく、気持ちよく走れていました。この形が合っているのかも。');
-    if (h.earlyWhip > 2) notes.push('早めのムチで馬が嫌がっていました。');
-    if (h.last3fRank <= 2) notes.push('上がり3Fはメンバー中' + h.last3fRank + '位。最後の脚は確かです。');
-    else if (h.last3fRank >= 12 && h.place > 3) notes.push('最後は伸びを欠きました（上がり3F ' + h.last3fRank + '位）。');
-    if (h.stamina > 30) notes.push('ゴール後も余力たっぷり。仕掛けが遅かったか、使いきれませんでした。');
-    if (h.staminaAtStretch != null && h.staminaAtStretch < 18) notes.push('直線入口で既に手応えがなく、苦しい競馬でした。');
-    if (h.blockedTime > 2.5) notes.push('直線で前が壁になり、追い出しが遅れました。');
-    if (!notes.length) notes.push('まだこの馬のことを掴みきれていません。いろいろ試してみましょう。');
+    if (h.fwdStress > 6) notes.push({ k: 'fwdBig' });
+    else if (h.fwdStress > 2.5) notes.push({ k: 'fwdSmall' });
+    if (h.backStress > 6) notes.push({ k: 'backBig' });
+    else if (h.backStress > 2.5) notes.push({ k: 'backSmall' });
+    if (h.comfort > 70 && total < 3) notes.push({ k: 'comfort' });
+    if (h.earlyWhip > 2) notes.push({ k: 'earlyWhip' });
+    if (h.last3fRank <= 2) notes.push({ k: 'fastFinish', r: h.last3fRank });
+    else if (h.last3fRank >= 12 && h.place > 3) notes.push({ k: 'slowFinish', r: h.last3fRank });
+    if (h.stamina > 30) notes.push({ k: 'leftover' });
+    if (h.staminaAtStretch != null && h.staminaAtStretch < 18) notes.push({ k: 'emptyEarly' });
+    if (h.blockedTime > 2.5) notes.push({ k: 'blocked' });
+    if (!notes.length) notes.push({ k: 'unknown' });
     return notes;
   }
 
   const api = {
     VENUES, CALENDAR, STYLES, STYLE_KEYS, VBASE, HORSE_LEN,
+    setLang, raceName, officialName, venueName, styleName, sectionName, noteText,
     buildCourse, createRace, step, analyze, sectionAt, isCurve, curveOverlap, inHome, marginText, formatTime, mulberry32, randomName, frameOf, passingText,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
