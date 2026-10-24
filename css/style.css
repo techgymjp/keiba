@@ -265,6 +265,7 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   #title .buttons { grid-column: 2; margin-top: 0; flex-direction: column; }
   #title .buttons button { width: 100%; flex: none; }
   #title #btn-newhorse { grid-column: 2; margin-top: 4px; }
+  #title #btn-totop { grid-column: 2; margin-top: 0; }
   #top .panel { padding: 18px 20px 12px; margin: auto; }
   #top .logo { display: block; }
   #top .logo h1 { font-size: 40px; }

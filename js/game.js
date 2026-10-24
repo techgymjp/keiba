@@ -293,6 +293,7 @@
   $('btn-totitle').addEventListener('click', () => afterInterstitial(toTitle));
   $('btn-help').addEventListener('click', () => show('help'));
   $('btn-enter').addEventListener('click', () => { GameAudio.init(); refreshTitle(); show('title'); });
+  $('btn-totop').addEventListener('click', () => show('top'));
   $('btn-history').addEventListener('click', () => { refreshHistory(); show('history'); });
   document.querySelectorAll('.back').forEach((b) => b.addEventListener('click', () => show('title')));
   $('btn-newhorse').addEventListener('click', () => {
@@ -340,6 +341,7 @@
       else if (phase === 'finish') return;
       else if (visible('help') || visible('history')) show('title');
       else if (visible('title')) show('top');
+      else if (visible('result')) afterInterstitial(toTitle);
       else plugin('App').exitApp();
     });
   }
@@ -390,7 +392,7 @@
     $('caption').classList.add('hidden');
     GameAudio.setCrowd(0.05);
     refreshTitle();
-    show('title');
+    show('top'); // レースから戻るときはトップ画面へ
   }
 
   function startRace(isRetry) {
