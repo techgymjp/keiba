@@ -186,7 +186,7 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
 #hud-ride { font-size: 12px; margin-top: 4px; color: #e9c46a; }
 #minimap { border-radius: 10px; width: 220px; height: 150px; }
 #center-msg {
-  position: absolute; top: 36%; left: 0; right: 0; text-align: center;
+  position: absolute; top: 24%; /* 馬の様子（#feel, 46%）と重ならない高さ */ left: 0; right: 0; text-align: center;
   font-size: 56px; font-weight: bold; color: #fff; text-shadow: 0 3px 8px #000;
   pointer-events: none;
 }
@@ -233,6 +233,11 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   .buttons button.primary { flex-basis: 100%; }
   .tgroup button { width: 58px; height: 58px; }
   .hist td.memo { min-width: 160px; }
+}
+
+/* タッチ操作の端末では ♪ を右上（時計の下）へ。下だと操作ボタン（ムチ）と重なる */
+@media (pointer: coarse) {
+  #btn-mute { bottom: auto; top: 76px; right: 12px; }
 }
 
 /* ---- 横向きのスマホ（高さが小さい画面）：Android アプリは横画面固定 ---- */
