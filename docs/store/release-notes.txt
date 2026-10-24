@@ -1,0 +1,16 @@
+<ja-JP>
+ダービージョッキー、初めてのリリースです。
+・騎手目線で、JRA の平地G1全24戦（フェブラリーSから有馬記念まで）に挑めます
+・相棒の脚質（逃げ・先行・差し・追込）は秘密。レースを重ねて見抜こう
+・東京・中山・京都・阪神・中京の9コース、芝とダート、1200m〜3200m
+・実況、戦績ノート、シーズン総括、結果のシェア
+・日本語・英語に対応
+</ja-JP>
+<en-US>
+The first release of Derby Jockey.
+• Ride all 24 of JRA's flat G1 races from the jockey's seat, from the February Stakes to the Arima Kinen
+• Your horse's running style is hidden — work it out race by race
+• Nine courses at Tokyo, Nakayama, Kyoto, Hanshin and Chukyo, turf and dirt, 1200 m to 3200 m
+• Live commentary, race log, season review and result sharing
+• English and Japanese
+</en-US>

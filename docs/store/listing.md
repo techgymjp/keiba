@@ -9,6 +9,10 @@ Play Console の「ストアの掲載情報」に貼り付けて使います。�
 | 日本語（ja-JP） | `listing-ja.txt` |
 | 英語（en-US） | `listing-en.txt` |
 
+## リリースノート
+
+`release-notes.txt` を、Play Console の本番リリースの「リリースノート」欄にそのまま貼り付けます（`<ja-JP>` と `<en-US>` で言語ごとに書き分け。各言語 500 文字以内）。
+
 ## 画像（このフォルダ）
 
 | 用途 | ファイル | サイズ |
