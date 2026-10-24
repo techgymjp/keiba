@@ -146,7 +146,7 @@
 
   // ---- 画面 ----
   // バナー広告を出す画面（Android アプリのみ）
-  const BANNER_SCREENS = ['title', 'pause', 'result'];
+  const BANNER_SCREENS = ['top', 'title', 'pause', 'result'];
   function show(id) {
     for (const s of document.querySelectorAll('.screen')) s.classList.add('hidden');
     if (id) $(id).classList.remove('hidden');
@@ -292,6 +292,7 @@
   });
   $('btn-totitle').addEventListener('click', () => afterInterstitial(toTitle));
   $('btn-help').addEventListener('click', () => show('help'));
+  $('btn-enter').addEventListener('click', () => { GameAudio.init(); refreshTitle(); show('title'); });
   $('btn-history').addEventListener('click', () => { refreshHistory(); show('history'); });
   document.querySelectorAll('.back').forEach((b) => b.addEventListener('click', () => show('title')));
   $('btn-newhorse').addEventListener('click', () => {
@@ -338,6 +339,7 @@
       else if (phase === 'fanfare') skipFanfare = true;
       else if (phase === 'finish') return;
       else if (visible('help') || visible('history')) show('title');
+      else if (visible('title')) show('top');
       else plugin('App').exitApp();
     });
   }
@@ -873,6 +875,6 @@
   I18N.apply();
   refreshHelp();
   refreshTitle();
-  show('title');
+  show('top');
   requestAnimationFrame(frame);
 })();

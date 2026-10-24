@@ -43,8 +43,26 @@
       </div>
     </div>
 
-    <!-- タイトル -->
-    <section id="title" class="screen">
+    <!-- トップ（起動時の画面） -->
+    <section id="top" class="screen">
+      <div class="panel">
+        <div class="logo">
+          <div class="logo-sub" data-i18n="logo.sub">G1 ROAD ・ 2月〜12月 G1 全24戦</div>
+          <h1 data-i18n-html="logo.title">ダービー<span>ジョッキー</span></h1>
+        </div>
+        <p class="top-lead" data-i18n="top.lead"></p>
+        <div class="buttons"><button id="btn-enter" class="primary" data-i18n="top.enter">はじめる</button></div>
+        <p class="legal">
+          <span id="build-info"></span>
+          <a href="https://techgym.jp/privacy-policy/" data-i18n-href="url.privacy" target="_blank" rel="noopener" data-i18n="legal.privacy">プライバシーポリシー</a>
+          <span id="ad-privacy" class="hidden">｜<a href="#" id="ad-privacy-link" data-i18n="legal.adSettings">広告の設定</a></span>
+        </p>
+        <p class="lang-sel"><button class="lang-btn" data-lang="ja">日本語</button><button class="lang-btn" data-lang="en">English</button></p>
+      </div>
+    </section>
+
+    <!-- タイトル（厩舎：相棒と次走） -->
+    <section id="title" class="screen hidden">
       <div class="panel">
         <div class="logo">
           <div class="logo-sub" data-i18n="logo.sub">G1 ROAD ・ 2月〜12月 G1 全24戦</div>
@@ -70,12 +88,6 @@
           <button id="btn-help" data-i18n="title.help">乗り方</button>
         </div>
         <button id="btn-newhorse" class="link" data-i18n="title.newHorse">新しい馬に乗り替わる</button>
-        <p class="legal">
-          <span id="build-info"></span>
-          <a href="https://techgym.jp/privacy-policy/" data-i18n-href="url.privacy" target="_blank" rel="noopener" data-i18n="legal.privacy">プライバシーポリシー</a>
-          <span id="ad-privacy" class="hidden">｜<a href="#" id="ad-privacy-link" data-i18n="legal.adSettings">広告の設定</a></span>
-        </p>
-        <p class="lang-sel"><button class="lang-btn" data-lang="ja">日本語</button><button class="lang-btn" data-lang="en">English</button></p>
       </div>
     </section>
 

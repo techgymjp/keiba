@@ -59,6 +59,14 @@ button.primary {
   flex: 1;
 }
 button.primary:hover { filter: brightness(1.08); }
+/* トップ画面（起動時） */
+#top .panel { max-width: 680px; text-align: center; padding: 36px 28px 22px; }
+#top .logo h1 { font-size: 56px; white-space: nowrap; }
+#top .logo-sub { font-size: 13px; }
+.top-lead { color: #e8e2cf; font-size: 15px; margin: 4px 0 6px; }
+#top .buttons { justify-content: center; margin-top: 18px; }
+#top .buttons .primary { flex: none; min-width: 240px; font-size: 18px; padding: 14px 24px; }
+
 /* 言語切り替え */
 .lang-sel { margin: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
 .lang-btn { font-size: 12px; padding: 4px 14px; border-radius: 14px; opacity: 0.65; }
@@ -257,8 +265,12 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   #title .buttons { grid-column: 2; margin-top: 0; flex-direction: column; }
   #title .buttons button { width: 100%; flex: none; }
   #title #btn-newhorse { grid-column: 2; margin-top: 4px; }
-  #title .legal { grid-column: 2; margin-top: 4px; font-size: 11px; }
-  #title .lang-sel { grid-column: 2; margin-top: 4px; }
+  #top .panel { padding: 18px 20px 12px; margin: auto; }
+  #top .logo { display: block; }
+  #top .logo h1 { font-size: 40px; }
+  #top .buttons { margin-top: 10px; }
+  #top .buttons .primary { padding: 10px 24px; font-size: 16px; }
+  #top .legal { margin-top: 8px; }
   #horse-name { font-size: 18px; }
   .stats { margin-top: 6px; }
   .stats b { font-size: 15px; }
