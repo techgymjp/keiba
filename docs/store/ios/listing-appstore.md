@@ -45,8 +45,9 @@ App Store Connect の「配信」タブ（バージョンのページ）と「Ap
 
 **Name** (max 30)
 ```
-Derby Jockey
+Derby Jockey - Horse Racing
 ```
+（「Derby Jockey」は App Store で別のアプリが使っていたため。iPhone のホーム画面の名前は Derby Jockey のまま）
 
 **Subtitle** (max 30)
 ```
