@@ -30,8 +30,6 @@ jobs:
     timeout-minutes: 45
     env:
       HAS_SECRETS: ${{ secrets.ASC_KEY_P8_BASE64 != '' && secrets.IOS_DIST_CERT_P12_BASE64 != '' }}
-      # 手元の Mac から上げるビルド（1, 2, 3…）とぶつからないよう、101 から始める
-      BUILD_NUMBER: ${{ github.run_number + 100 }}
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       TEAM_ID: GNM3VTX9YG
@@ -58,6 +56,9 @@ jobs:
       - name: Copy web assets into the iOS project (production ads)
         if: env.HAS_SECRETS == 'true'
         run: |
+          # ビルド番号：手元の Mac から上げるビルド（1, 2, 3…）とぶつからないよう、実行回数 + 100（101 から）
+          BUILD_NUMBER=$(( ${{ github.run_number }} + 100 ))
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "VERSION_NAME=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
           ADMOB_MODE=production VERSION_CODE="$BUILD_NUMBER" VERSION_NAME="$(node -p "require('./package.json').version")" npm run build
           npx cap sync ios
