@@ -21,11 +21,10 @@ const Ads = (() => {
         interstitial: 'ca-app-pub-3940256099942544/4411468910',
         rewarded: 'ca-app-pub-3940256099942544/1712485313',
       },
-      // iOS 用の広告ユニット（空のものはまだ未設定）
       production: {
         banner: 'ca-app-pub-6411535997477460/1391104643',
-        interstitial: '',
-        rewarded: '',
+        interstitial: 'ca-app-pub-6411535997477460/9486051233',
+        rewarded: 'ca-app-pub-6411535997477460/8355048377',
       },
     },
   };
@@ -39,7 +38,9 @@ const Ads = (() => {
   const testing = window.AD_MODE !== 'production';
   const ids = UNITS[platform][testing ? 'test' : 'production'];
   const AdMob = native && cap.Plugins ? cap.Plugins.AdMob : null;
-  const hasFullscreen = !!(AdMob && ids.interstitial && ids.rewarded); // 全画面・リワード広告を出せるか
+  // 広告の種類ごとに、出せるか（広告ユニット ID があるか）
+  const hasInter = !!(AdMob && ids.interstitial);
+  const hasReward = !!(AdMob && ids.rewarded);
   const hasBanner = !!(AdMob && ids.banner);
 
   let ready = false; // 広告をリクエストしてよい状態（初期化と同意確認が済んだ）
@@ -117,10 +118,8 @@ const Ads = (() => {
       // 隠したときは高さ 0 が来る（表示処理の完了前に届くこともあるので、届いた高さをそのまま使う）
       document.documentElement.style.setProperty('--banner-h', (size && size.height ? size.height : 0) + 'px');
     });
-    if (hasFullscreen) {
-      prepare('inter');
-      prepare('reward');
-    }
+    if (hasInter) prepare('inter');
+    if (hasReward) prepare('reward');
     syncBanner();
   }
 
@@ -169,7 +168,7 @@ const Ads = (() => {
 
   // 全画面広告を表示し、閉じられたら resolve する（読み込めていないときは出さずにすぐ resolve）
   function showInterstitial() {
-    if (!hasFullscreen || !ready || !slots.inter.loaded || showing) return Promise.resolve();
+    if (!hasInter || !ready || !slots.inter.loaded || showing) return Promise.resolve();
     if (Date.now() - lastInterstitial < INTERSTITIAL_GAP_MS) return Promise.resolve();
     lastInterstitial = Date.now();
     showing = true;
@@ -184,7 +183,7 @@ const Ads = (() => {
 
   // リワード広告を表示する。結果は 'rewarded'（最後まで見た）/ 'skipped'（途中で閉じた）/ 'unavailable'（読み込めなかった）
   async function showRewarded() {
-    if (!hasFullscreen || showing) return 'unavailable';
+    if (!hasReward || showing) return 'unavailable';
     await initDone;
     if (!ready || !(await ensureLoaded('reward', 8000))) return 'unavailable';
     showing = true;
@@ -206,8 +205,10 @@ const Ads = (() => {
   const initDone = AdMob ? init() : Promise.resolve();
 
   return {
-    // 全画面・リワード広告が使えるか（Android アプリで、広告ユニット ID があるとき）
-    get available() { return hasFullscreen; },
+    // 全画面広告が使えるか（Android / iOS アプリで、広告ユニット ID があるとき）
+    get available() { return hasInter; },
+    // リワード広告（負けたレースのやり直し）が使えるか
+    get rewardAvailable() { return hasReward; },
     setBanner,
     get showing() { return showing; },
     get privacyOptionsRequired() { return privacyRequired; },

@@ -813,7 +813,7 @@
     }
     shareMsg('');
     // 負けたレースは、広告を見て1回だけやり直せる（Android アプリのみ）
-    $('retry-box').classList.toggle('hidden', !(Ads.available && !won && !retryUsed));
+    $('retry-box').classList.toggle('hidden', !(Ads.rewardAvailable && !won && !retryUsed));
     $('retry-msg').textContent = '';
     show('result');
   }
