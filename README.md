@@ -158,7 +158,7 @@ npm run android:open   # Android Studio で開く
 Android 版と同じ Capacitor のプロジェクトに `ios/` を足しています（JET STRIKE と同じ構成）。Bundle ID は `jp.techgym.keiba`、iPhone 専用・横画面固定です。
 ビルドと App Store への提出は Mac で行います。手順は `docs/IOS_BUILD.md` にあります。
 
-- 広告は Android と同じ配置（バナー・インタースティシャル・リワード）。iOS 用の広告ユニットは `js/ads.js` の `UNITS.ios`、アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`（**いまは Google のテスト用。iOS 用に登録したら差し替える**）
+- 広告は Android と同じ配置（バナー・インタースティシャル・リワード）。iOS 用の広告ユニットは `js/ads.js` の `UNITS.ios`、アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`
 - 起動時に App Tracking Transparency の確認を出す（断られても広告は出る）
 - ノッチ / Dynamic Island と角の丸みに HUD や操作ボタンがかからないよう、セーフエリアの内側に置く
 - `npm run ios:sync`（テスト広告）／ `npm run ios:release`（本番広告。App Store 用）／ `npm run ios:open`

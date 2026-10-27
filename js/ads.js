@@ -21,9 +21,9 @@ const Ads = (() => {
         interstitial: 'ca-app-pub-3940256099942544/4411468910',
         rewarded: 'ca-app-pub-3940256099942544/1712485313',
       },
-      // iOS 用の広告ユニットを作ったら入れる
+      // iOS 用の広告ユニット（空のものはまだ未設定）
       production: {
-        banner: '',
+        banner: 'ca-app-pub-6411535997477460/1391104643',
         interstitial: '',
         rewarded: '',
       },

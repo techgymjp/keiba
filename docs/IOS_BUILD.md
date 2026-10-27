@@ -9,7 +9,7 @@
 - 対応端末：iPhone（横画面固定）。iPad では iPhone 用の画面で動きます
 - 広告：AdMob（iOS 用のアプリと広告ユニット）。起動時に「トラッキングの許可」の確認画面が出ます
 
-> **App Store に出す前に**：AdMob の iOS 用の ID がまだテスト用です。iOS 用のアプリと広告ユニットを作ったら、Claude Code に ID を渡して差し替えてもらってください（`ios/App/App/Info.plist` の `GADApplicationIdentifier` と、`js/ads.js` の `UNITS.ios.production`）。差し替えるまで、App Store 用のビルドでも広告は出ません。
+> **App Store に出す前に**：AdMob の iOS 用のアプリ ID とバナーは設定済みです。インタースティシャルとリワードの広告ユニット ID がまだなので、Claude Code に渡して `js/ads.js` の `UNITS.ios.production` に入れてもらってください。入れるまで、App Store 用のビルドでは全画面広告とリワード広告（負けたレースのやり直し）が出ません。
 
 ---
 
