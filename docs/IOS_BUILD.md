@@ -173,7 +173,12 @@ base64 -i 証明書.p12 | tr -d '\n' | pbcopy
 base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n' | pbcopy
 ```
 
-登録が終わったら、Claude Code に「iOS の自動アップロードのワークフローを作って」と頼みます。
+Secrets は登録済みで、`.github/workflows/ios-release.yml` が動いています。既定のブランチに push するたびに、GitHub の Mac が**本番広告の設定**でビルドし、App Store Connect（TestFlight）にアップロードします。手で実行するときは、リポジトリの「Actions」→「iOS release (TestFlight)」→「Run workflow」。
+
+- ビルド番号は **101 から**自動で 1 ずつ上がります（GitHub Actions の実行回数 + 100）。手元の Mac から上げるビルド（3 章で 1, 2, 3…）とはぶつかりません
+- バージョン（1.0.0 など）は `package.json` の `version` です
+- 署名用のプロファイルは、API キーを使って Xcode が自動で作ります（API キーのアクセスが「管理」なのはこのため）
+- アップロードが終わると 10〜30 分で TestFlight に表示されます。審査への提出は App Store Connect で行います
 
 **注意**：証明書（.p12）、そのパスワード、API キー（.p8）は、チャット・AI へのアップロード・リポジトリへのコミットで**絶対に共有しない**でください。
 
