@@ -153,6 +153,18 @@ npm run android:open   # Android Studio で開く
 
 バージョン番号（versionCode）は Actions の実行回数が自動で使われます。表示用のバージョン名は `package.json` の `version` です。
 
+## iOS 版（App Store 配布用）
+
+Android 版と同じ Capacitor のプロジェクトに `ios/` を足しています（JET STRIKE と同じ構成）。Bundle ID は `jp.techgym.keiba`、iPhone 専用・横画面固定です。
+ビルドと App Store への提出は Mac で行います。手順は `docs/IOS_BUILD.md` にあります。
+
+- 広告は Android と同じ配置（バナー・インタースティシャル・リワード）。iOS 用の広告ユニットは `js/ads.js` の `UNITS.ios`、アプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`（**いまは Google のテスト用。iOS 用に登録したら差し替える**）
+- 起動時に App Tracking Transparency の確認を出す（断られても広告は出る）
+- ノッチ / Dynamic Island と角の丸みに HUD や操作ボタンがかからないよう、セーフエリアの内側に置く
+- `npm run ios:sync`（テスト広告）／ `npm run ios:release`（本番広告。App Store 用）／ `npm run ios:open`
+- `.github/workflows/ios.yml` が push のたびに、署名なしでシミュレーター向けにビルドできるかを確認する
+- App Store 用の画像と掲載文は `docs/store/ios/`
+
 ## ライセンス
 
 All rights reserved. 著作権はテックジム株式会社に帰属します。無断での複製・改変・再配布、Web サイトやアプリとしての公開を禁止します。ただし、テックジムの受講生が学習目的で複製・改変することは許可します（商用利用は不可。詳しくは `LICENSE`）。

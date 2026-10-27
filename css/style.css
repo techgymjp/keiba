@@ -302,3 +302,23 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   /* 時計の左どなり（タイトルではパネルの上端の余白） */
   #btn-mute { bottom: auto; top: 6px; right: 100px; width: 32px; height: 32px; transform: none; }
 }
+
+/* ---- iPhone のノッチ / Dynamic Island・角の丸み（横画面では左右に出る）を避ける ----
+   セーフエリアの外にはゲーム画面（canvas）だけを描き、HUD やボタンは内側に置く。Android / Web では 0 */
+:root {
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+.screen { padding-left: max(16px, var(--safe-l)); padding-right: max(16px, var(--safe-r)); }
+.hud-top { left: max(10px, var(--safe-l)); right: max(10px, var(--safe-r)); }
+.hud-bottom { left: max(10px, var(--safe-l)); right: max(10px, var(--safe-r)); bottom: max(10px, var(--safe-b)); }
+#touch { padding-left: max(10px, var(--safe-l)); padding-right: max(10px, var(--safe-r)); }
+@media (max-height: 500px) {
+  .screen { padding-left: max(8px, var(--safe-l)); padding-right: max(8px, var(--safe-r)); }
+  .hud-top { left: max(8px, var(--safe-l)); right: max(8px, var(--safe-r)); }
+  .hud-bottom { left: max(8px, var(--safe-l)); right: max(8px, var(--safe-r)); bottom: max(6px, var(--safe-b)); }
+  #touch .tgroup.left { left: max(8px, var(--safe-l)); bottom: calc(74px + var(--safe-b)); }
+  #touch .tgroup.right { right: max(8px, var(--safe-r)); bottom: calc(116px + var(--safe-b)); }
+  #btn-mute { right: calc(100px + var(--safe-r)); }
+}
