@@ -142,6 +142,8 @@
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   // Android アプリ（Capacitor）で動いているか。Web 版では Capacitor が無いので何もしない
   const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  // Web 版ではトップ画面にアプリ版へのリンクを出す
+  if (!NATIVE) $('store-links').classList.remove('hidden');
   const plugin = (name) => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
 
   // ---- 画面 ----

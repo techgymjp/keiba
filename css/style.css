@@ -66,6 +66,13 @@ button.primary:hover { filter: brightness(1.08); }
 .top-lead { color: #e8e2cf; font-size: 15px; margin: 4px 0 6px; }
 #top .buttons { justify-content: center; margin-top: 18px; }
 #top .buttons .primary { flex: none; min-width: 240px; font-size: 18px; padding: 14px 24px; }
+/* アプリ版へのリンク（Web 版のみ） */
+.store-links { margin: 12px 0 0; display: flex; gap: 10px; justify-content: center; }
+.store-btn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 8px; background: #111; border: 1px solid #777; color: #fff; text-decoration: none; text-align: left; line-height: 1.1; }
+.store-btn:hover { border-color: #e9c46a; }
+.store-btn small { display: block; font-size: 10px; color: #ccc; }
+.store-btn b { font-size: 15px; }
+.store-ic { font-size: 18px; color: #3ddc84; }
 
 /* 言語切り替え */
 .lang-sel { margin: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
@@ -270,6 +277,7 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   #top .logo { display: block; }
   #top .logo h1 { font-size: 40px; }
   #top .buttons { margin-top: 10px; }
+  .store-links { margin-top: 8px; }
   #top .buttons .primary { padding: 10px 24px; font-size: 16px; }
   #top .legal { margin-top: 8px; }
   #horse-name { font-size: 18px; }
