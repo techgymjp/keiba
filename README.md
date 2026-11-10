@@ -80,7 +80,7 @@ Android のアプリ名も、日本語の端末では「ダービージョッキ
 
 ## Web 版の公開（Vercel）
 
-`vercel.json` で、Vercel が `npm run build` を実行して `www/` を公開するよう設定しています（Android アプリに同梱するのと同じファイルです）。
+`vercel.json` で、Vercel が `npm run build` を実行して `www/` を公開するよう設定しています。アプリ（Android / iOS）には `npm run build:app` で、Web 版だけの部分（Google Play へのリンクなど）を取り除いたものを入れます（`docs/IOS_BUILD.md` の「Web 版だけの部分をアプリに入れない」）。
 
 ## Android 版（Google Play 配布用）
 

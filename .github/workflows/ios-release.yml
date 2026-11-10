@@ -3,6 +3,8 @@ name: iOS release (TestFlight)
 # push するたびに、本番広告の設定で iOS 版をビルドし、App Store Connect（TestFlight）にアップロードする。
 # 審査への提出は App Store Connect で行う（docs/IOS_BUILD.md）。
 # 必要な Secrets：IOS_DIST_CERT_P12_BASE64 / IOS_DIST_CERT_PASSWORD / ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64
+# 署名は登録済みの配布用証明書 + API で作る App Store 用プロファイルで行う（手動署名）。
+# Xcode の自動署名だと、実行のたびに開発用の証明書が作られ、上限に達して失敗するため。
 on:
   push:
     paths:
@@ -53,14 +55,14 @@ jobs:
         timeout-minutes: 5
         run: npm ci
 
-      - name: Copy web assets into the iOS project (production ads)
+      - name: Copy web assets into the iOS project (app build, production ads)
         if: env.HAS_SECRETS == 'true'
         run: |
           # ビルド番号：手元の Mac から上げるビルド（1, 2, 3…）とぶつからないよう、実行回数 + 100（101 から）
           BUILD_NUMBER=$(( ${{ github.run_number }} + 100 ))
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "VERSION_NAME=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
-          ADMOB_MODE=production VERSION_CODE="$BUILD_NUMBER" VERSION_NAME="$(node -p "require('./package.json').version")" npm run build
+          ADMOB_MODE=production VERSION_CODE="$BUILD_NUMBER" VERSION_NAME="$(node -p "require('./package.json').version")" npm run build:app
           npx cap sync ios
 
       # 配布用の証明書を、このジョブだけの一時的なキーチェーンに入れる
@@ -91,6 +93,20 @@ jobs:
           echo "$P8_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
           echo "ASC_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
 
+      - name: Create the App Store provisioning profile
+        if: env.HAS_SECRETS == 'true'
+        env:
+          BUNDLE_ID: jp.techgym.keiba
+          PROFILE_NAME: keiba App Store CI
+        run: node .github/scripts/asc-appstore-profile.mjs
+
+      # App ターゲットの Release だけを手動署名にする（リポジトリのプロジェクトは自動署名のまま。手元の Mac 用）
+      - name: Switch the App target to manual signing
+        if: env.HAS_SECRETS == 'true'
+        run: |
+          perl -0pi -e 's/(504EC3181FED79650016851F \/\* Release \*\/ = \{.*?)CODE_SIGN_STYLE = Automatic;/$1CODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "$ENV{PROFILE_NAME}";/s' ios/App/App.xcodeproj/project.pbxproj
+          grep -q 'CODE_SIGN_STYLE = Manual;' ios/App/App.xcodeproj/project.pbxproj
+
       - name: Archive
         if: env.HAS_SECRETS == 'true'
         working-directory: ios/App
@@ -99,10 +115,6 @@ jobs:
           xcodebuild -project App.xcodeproj -scheme App -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$ASC_KEY_PATH" \
-            -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             MARKETING_VERSION="$VERSION_NAME" \
@@ -120,7 +132,12 @@ jobs:
           <dict>
             <key>method</key><string>app-store-connect</string>
             <key>destination</key><string>upload</string>
-            <key>signingStyle</key><string>automatic</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>jp.techgym.keiba</key><string>${PROFILE_NAME}</string>
+            </dict>
             <key>teamID</key><string>${TEAM_ID}</string>
             <key>uploadSymbols</key><true/>
             <key>manageAppVersionAndBuildNumber</key><false/>

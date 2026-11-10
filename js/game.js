@@ -8,8 +8,13 @@
   const CAL_VER = 2; // 2 = JRA 平地G1 全24戦（週1回）
   const t = I18N.t;
   Sim.setLang(I18N.lang);
-  // 実時間1秒あたりのレース内秒数（?speed=4 などで早送り。動作確認用）
-  const SIM_SPEED = 1.6 * Math.min(8, Math.max(0.25, +new URLSearchParams(location.search).get('speed') || 1));
+  // 実時間1秒あたりのレース内秒数
+  let speed = 1;
+  // web-only:start
+  // ?speed=4 などで早送り（Web 版での動作確認用。アプリには入れない）
+  speed = Math.min(8, Math.max(0.25, +new URLSearchParams(location.search).get('speed') || 1));
+  // web-only:end
+  const SIM_SPEED = 1.6 * speed;
   const SIM_DT = 1 / 60;
 
   // ---- セーブデータ ----
@@ -142,8 +147,6 @@
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   // Android アプリ（Capacitor）で動いているか。Web 版では Capacitor が無いので何もしない
   const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  // Web 版ではトップ画面にアプリ版へのリンクを出す
-  if (!NATIVE) $('store-links').classList.remove('hidden');
   const plugin = (name) => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Plugins[name] : null);
 
   // ---- 画面 ----

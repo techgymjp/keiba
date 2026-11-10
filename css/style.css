@@ -66,10 +66,12 @@ button.primary:hover { filter: brightness(1.08); }
 .top-lead { color: #e8e2cf; font-size: 15px; margin: 4px 0 6px; }
 #top .buttons { justify-content: center; margin-top: 18px; }
 #top .buttons .primary { flex: none; min-width: 240px; font-size: 18px; padding: 14px 24px; }
+/* web-only:start */
 /* アプリ版へのリンク（Web 版のみ） */
 .store-links { margin: 12px 0 0; display: flex; gap: 10px; justify-content: center; }
 .store-link { color: #c7b07a; font-size: 14px; }
 .store-link:hover { color: #e9c46a; }
+/* web-only:end */
 
 /* 言語切り替え */
 .lang-sel { margin: 8px 0 0; display: flex; gap: 8px; justify-content: center; }
@@ -274,7 +276,9 @@ table.hist, table.res { width: 100%; border-collapse: collapse; font-size: 13px;
   #top .logo { display: block; }
   #top .logo h1 { font-size: 40px; }
   #top .buttons { margin-top: 10px; }
+  /* web-only:start */
   .store-links { margin-top: 8px; }
+  /* web-only:end */
   #top .buttons .primary { padding: 10px 24px; font-size: 16px; }
   #top .legal { margin-top: 8px; }
   #horse-name { font-size: 18px; }

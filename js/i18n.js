@@ -26,8 +26,10 @@ const I18N = (() => {
       'legal.privacy': 'プライバシーポリシー',
       'legal.adSettings': '広告の設定',
       'url.privacy': 'https://techgym.jp/privacy-policy/',
+      // web-only:start
       'url.play': 'https://play.google.com/store/apps/details?id=jp.techgym.keiba&hl=ja',
       'store.play': 'Android アプリ版（Google Play）',
+      // web-only:end
       'common.back': '戻る',
       'common.year': '{y}年目',
       'common.place': '{p}着',
@@ -191,8 +193,10 @@ const I18N = (() => {
       'legal.privacy': 'Privacy Policy',
       'legal.adSettings': 'Ad settings',
       'url.privacy': 'https://techgym.jp/privacy-policy-en/',
+      // web-only:start
       'url.play': 'https://play.google.com/store/apps/details?id=jp.techgym.keiba&hl=en',
       'store.play': 'Android app on Google Play',
+      // web-only:end
       'common.back': 'Back',
       'common.year': 'Year {y}',
       'common.place': '{p}',

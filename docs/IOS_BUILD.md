@@ -177,12 +177,28 @@ Secrets は登録済みで、`.github/workflows/ios-release.yml` が動いてい
 
 - ビルド番号は **101 から**自動で 1 ずつ上がります（GitHub Actions の実行回数 + 100）。手元の Mac から上げるビルド（3 章で 1, 2, 3…）とはぶつかりません
 - バージョン（1.0.0 など）は `package.json` の `version` です
-- 署名用のプロファイルは、API キーを使って Xcode が自動で作ります（API キーのアクセスが「管理」なのはこのため）
+- 署名は**登録済みの配布用証明書（.p12）だけ**で行います。App Store 用のプロファイルは、実行のたびに API キーで作り直します（`.github/scripts/asc-appstore-profile.mjs`。API キーのアクセスが「管理」なのはこのため）。Xcode の自動署名は GitHub の Mac で実行のたびに開発用の証明書を作り、「maximum number of certificates」で失敗するので使いません
 - アップロードが終わると 10〜30 分で TestFlight に表示されます。審査への提出は App Store Connect で行います
 
 **注意**：証明書（.p12）、そのパスワード、API キー（.p8）は、チャット・AI へのアップロード・リポジトリへのコミットで**絶対に共有しない**でください。
 
 いまの `.github/workflows/ios.yml` は、push のたびに「署名なしでシミュレーター向けにビルドできるか」だけを確認します（App Store に出すビルドは 3 章の手順で作ります）。
+
+---
+
+## Web 版だけの部分をアプリに入れない
+
+Web 版とアプリは同じファイルから作ります。Google Play へのリンクのような **Web 版だけの部分**がアプリに入っていると、アプリでは表示しなくても、App Store の審査で「審査中に隠された機能」（Guideline 5.6）とみなされることがあります。そこで、Web 版だけの部分は目印で囲み、アプリ用のビルド（`npm run build:app`）では取り除きます。
+
+| ファイル | 目印 |
+| --- | --- |
+| HTML | `<!-- web-only -->` … `<!-- /web-only -->` |
+| JS | `// web-only:start` … `// web-only:end` |
+| CSS | `/* web-only:start */` … `/* web-only:end */` |
+
+- `npm run android:sync` / `ios:sync` / `ios:release` と GitHub Actions は `build:app` を使います。Web 版の公開（Vercel）は従来どおり `npm run build`
+- アプリ用のビルドに `play.google.com`・`apps.apple.com`・目印・`?speed=`（早送りの確認用）が残っていると、ビルドが止まります
+- 端末・日付・地域などで出し分ける機能は、アプリには入れません（入れる場合は審査メモで説明する）
 
 ---
 
