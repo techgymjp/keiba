@@ -36,4 +36,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 横画面固定（sensorLandscape）にすると「横画面のハードウェアが必須」とみなされ、一部の端末（Chromebook・XR など）に配信されなくなるので、任意にする -->
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
 </manifest>
