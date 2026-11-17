@@ -1,0 +1,8 @@
+<ja-JP>
+・広告の表示を調整しました
+・アプリの内部を整理し、安定性を高めました
+</ja-JP>
+<en-US>
+• Adjusted how ads are shown
+• Internal cleanup for better stability
+</en-US>
