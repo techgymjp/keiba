@@ -1,0 +1,24 @@
+Dear App Review Board,
+
+We respectfully appeal the rejection of "Derby Jockey - Horse Racing" (jp.techgym.keiba, version 1.0.0) under Guideline 4.3(a) - Design - Spam. We believe the app is an original game, not a copy, re-skin or template of another app.
+
+1. Original concept and gameplay
+The player rides as the jockey, seen from the saddle. During the race the player chooses a lane, pushes, holds the horse back to save stamina, shifts weight and uses the whip in the final stretch. Each horse has a hidden running style (front-runner, stalker, closer or deep closer). It is never shown and must be worked out from race results, so learning your own horse is the core of the game.
+
+2. Content built for this app
+- A full season of all 24 JRA flat G1 races, in calendar order from February to December
+- Nine course layouts at five racecourses, turf and dirt, 1,200 m to 3,200 m, each with its own shape, direction and straight
+- Our own race simulation of pace, stamina, blocking and spurts
+- A pseudo-3D race view, minimap, live commentary, race log and season review
+- An original fanfare generated in code, with no third-party music
+- Full Japanese and English support
+
+3. Not a template or duplicate
+The game logic, graphics and sound were written from scratch for this app and share no gameplay code or assets with any other app. Our other apps are games in unrelated genres. The only shared parts are standard frameworks (Capacitor and the Google Mobile Ads SDK).
+
+4. Unique in the store
+As far as we know, no other app lets the player ride as the jockey through the real Japanese G1 calendar while working out a hidden running style. The app does not copy the design, name or content of any existing app.
+
+We would be grateful if you could review the app again. If a specific part of the app raised the concern, please let us know and we will gladly change it.
+
+Thank you for your time and consideration.
