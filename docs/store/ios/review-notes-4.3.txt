@@ -1,0 +1,22 @@
+Thank you for reviewing Derby Jockey - Horse Racing.
+
+About Guideline 4.3(a): this is an original game, written from scratch by our team. It is not a template, re-skin or copy of another app, and it shares no gameplay code or assets with any other app.
+
+What makes it unique:
+- You ride as the jockey, seen from the saddle. You choose your lane, push, hold the horse back to save stamina, shift weight and use the whip in the final stretch.
+- Each horse has a hidden running style (front-runner, stalker, closer or deep closer). It is never shown; you work it out from race results.
+- A full season of all 24 JRA flat G1 races, from February to December.
+- Nine course layouts at five racecourses, turf and dirt, 1,200 m to 3,200 m.
+- Our own race simulation, pseudo-3D race view, minimap, live commentary, race log and season review.
+- An original fanfare generated in code. No third-party music or art.
+- Japanese and English.
+
+How to try it:
+1. Tap "Start" on the top screen, then "Race" on the stable screen.
+2. After the fanfare, tap "Whip" the moment the gates open for a good start.
+3. Use the left and right buttons to choose your line. Hold "Push" to drive, hold "Hold" to save stamina, and use "Whip" in the home straight.
+4. After the race, check the result and the race log, then go on to the next G1.
+
+No login or account is needed. All features are available from the start, and nothing is hidden or changes during or after review.
+
+Ads: the app shows Google AdMob banner, interstitial and rewarded ads. The rewarded ad is optional and lets you retry a race you lost.
